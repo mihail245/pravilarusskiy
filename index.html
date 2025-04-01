@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Правила русского языка</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .rule {
+            background-color: #f9f9f9;
+            border-left: 4px solid #3498db;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            display: none; /* Сначала все разделы скрыты */
+        }
+        .active {
+            display: block; /* Показываем активный раздел */
+        }
+        .example {
+            background-color: #e8f4f8;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-style: italic;
+        }
+        .menu {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .menu-button {
+            padding: 8px 15px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .menu-button:hover {
+            background-color: #2980b9;
+        }
+        .menu-button.active {
+            background-color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <h1>Правила русского языка с примерами</h1>
+
+    <div class="menu">
+        <button class="menu-button active" onclick="showRule('rule1')">Виды связи</button>
+        <button class="menu-button" onclick="showRule('rule2')">Тире и двоеточие (сложное)</button>
+        <button class="menu-button" onclick="showRule('rule3')">Тире и двоеточие (простое)</button>
+        <button class="menu-button" onclick="showRule('rule4')">Типы сказуемых</button>
+        <button class="menu-button" onclick="showRule('rule5')">Односоставные предложения</button>
+        <button class="menu-button" onclick="showRule('rule6')">Художественные средства</button>
+    </div>
+
+    <div id="rule1" class="rule active">
+        <h2>1. Виды связи в сложном предложении</h2>
+        <p><strong>Сочинительная связь</strong> - связь между равноправными частями сложного предложения с помощью сочинительных союзов (и, а, но, или и др.).</p>
+        <div class="example">Пример: Солнце светило, <strong>и</strong> птицы пели.</div>
+        
+        <p><strong>Подчинительная связь</strong> - связь между главной и зависимой частями с помощью подчинительных союзов (что, чтобы, потому что и др.) или союзных слов.</p>
+        <div class="example">Пример: Я знаю, <strong>что</strong> он придёт.</div>
+        
+        <p><strong>Бессоюзная связь</strong> - связь между частями сложного предложения без союзов, только по смыслу и интонации.</p>
+        <div class="example">Пример: Поезд тронулся, перрон остался позади.</div>
+    </div>
+
+    <div id="rule2" class="rule">
+        <h2>2. Тире и двоеточие в бессоюзном сложном предложении</h2>
+        <p><strong>Двоеточие</strong> ставится, если:</p>
+        <ul>
+            <li>вторая часть поясняет первую (можно вставить "а именно")</li>
+            <div class="example">Пример: Погода была ужасная: лил дождь и дул сильный ветер.</div>
+            
+            <li>вторая часть дополняет первую (можно вставить "что")</li>
+            <div class="example">Пример: Я знаю: у вас всё получится.</div>
+        </ul>
+        
+        <p><strong>Тире</strong> ставится, если:</p>
+        <ul>
+            <li>содержание частей противопоставлено (можно вставить "а", "но")</li>
+            <div class="example">Пример: Лето припасёт — зима поест.</div>
+            
+            <li>первая часть указывает на время или условие (можно вставить "когда", "если")</li>
+            <div class="example">Пример: Лес рубят — щепки летят.</div>
+        </ul>
+    </div>
+
+    <div id="rule3" class="rule">
+        <h2>3. Тире и двоеточие в простом предложении</h2>
+        <p><strong>Двоеточие</strong> ставится:</p>
+        <ul>
+            <li>перед однородными членами после обобщающего слова</li>
+            <div class="example">Пример: На столе лежали фрукты: яблоки, груши и бананы.</div>
+            
+            <li>в бессоюзных предложениях с пояснением</li>
+            <div class="example">Пример: Он был настоящий друг: всегда помогал в трудную минуту.</div>
+        </ul>
+        
+        <p><strong>Тире</strong> ставится:</p>
+        <ul>
+            <li>между подлежащим и сказуемым (если оба выражены существительными или инфинитивами)</li>
+            <div class="example">Пример: Книга — источник знаний.</div>
+            
+            <li>перед обобщающим словом после однородных членов</li>
+            <div class="example">Пример: Дом, дерево, забор — всё было покрыто снегом.</div>
+        </ul>
+    </div>
+
+    <div id="rule4" class="rule">
+        <h2>4. Типы сказуемых</h2>
+        <p><strong>Простое глагольное сказуемое</strong> - выражено одним глаголом в любой форме.</p>
+        <div class="example">Пример: Он <strong>читает</strong> книгу. / Он <strong>будет читать</strong> книгу.</div>
+        
+        <p><strong>Составное глагольное сказуемое</strong> - вспомогательный глагол + инфинитив.</p>
+        <div class="example">Пример: Он <strong>начал работать</strong>. / Я <strong>хочу спать</strong>.</div>
+        
+        <p><strong>Составное именное сказуемое</strong> - глагол-связка + именная часть (сущ., прил., числ.).</p>
+        <div class="example">Пример: День <strong>был солнечный</strong>. / Он <strong>стал врачом</strong>.</div>
+    </div>
+
+    <div id="rule5" class="rule">
+        <h2>5. Виды односоставных предложений</h2>
+        <p><strong>Определённо-личные</strong> - подлежащее я/ты, сказуемое в форме 1/2 лица.</p>
+        <div class="example">Пример: <strong>Люблю</strong> грозу в начале мая.</div>
+        
+        <p><strong>Неопределённо-личные</strong> - действие совершается неопределёнными лицами.</p>
+        <div class="example">Пример: В дверь <strong>постучали</strong>.</div>
+        
+        <p><strong>Обобщённо-личные</strong> - действие относится ко всем вообще.</p>
+        <div class="example">Пример: <strong>Что посеешь</strong>, то и пожнёшь.</div>
+        
+        <p><strong>Безличные</strong> - нет и не может быть подлежащего.</p>
+        <div class="example">Пример: На улице <strong>холодает</strong>.</div>
+        
+        <p><strong>Назывные</strong> - только подлежащее, называющее предмет или явление.</p>
+        <div class="example">Пример: <strong>Ночь</strong>. <strong>Улица</strong>. <strong>Фонарь</strong>. <strong>Аптека</strong>.</div>
+    </div>
+
+    <div id="rule6" class="rule">
+        <h2>6. Средства художественной выразительности</h2>
+        <p><strong>Эпитет</strong> - образное определение.</p>
+        <div class="example">Пример: <strong>золотая</strong> осень, <strong>седой</strong> туман.</div>
+        
+        <p><strong>Сравнение</strong> - сопоставление предметов с помощью слов "как", "словно", "будто".</p>
+        <div class="example">Пример: Лёгкий, <strong>как пух</strong>, снег падал на землю.</div>
+        
+        <p><strong>Метафора</strong> - скрытое сравнение, переносное значение.</p>
+        <div class="example">Пример: <strong>Огонь</strong> рябины красной (о ягодах).</div>
+        
+        <p><strong>Олицетворение</strong> - наделение неживого качествами живого.</p>
+        <div class="example">Пример: <strong>Ветер воет</strong> за окном.</div>
+        
+        <p><strong>Гипербола</strong> - преувеличение.</p>
+        <div class="example">Пример: Я <strong>тысячу раз</strong> тебе это говорил!</div>
+        
+        <p><strong>Литота</strong> - преуменьшение.</p>
+        <div class="example">Пример: <strong>Мальчик с пальчик</strong>.</div>
+    </div>
+
+    <script>
+        function showRule(ruleId) {
+            // Скрываем все разделы
+            document.querySelectorAll('.rule').forEach(rule => {
+                rule.classList.remove('active');
+            });
+            
+            // Убираем активный класс у всех кнопок
+            document.querySelectorAll('.menu-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Показываем выбранный раздел
+            document.getElementById(ruleId).classList.add('active');
+            
+            // Делаем кнопку активной
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>
