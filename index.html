@@ -3,520 +3,1309 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Правила русского языка</title>
+    <title>Защита базы от зомби</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-            position: relative;
+            margin: 0;
+            padding: 0;
             background-color: #111;
-            color: #ddd;
+            color: white;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
         }
-        h1, h2, h3 {
-            color: #d00;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.7);
+        
+        #gameContainer {
+            position: relative;
+            width: 800px;
+            height: 600px;
+            border: 2px solid #333;
+            background-color: #000;
             margin-top: 20px;
         }
-        .rule {
-            background-color: #222;
-            border-left: 4px solid #d00;
-            padding: 15px;
-            margin-bottom: 25px;
-            display: none;
-            box-shadow: 3px 3px 5px rgba(0,0,0,0.3);
-            border-radius: 0 5px 5px 0;
-        }
-        .active {
+        
+        canvas {
             display: block;
         }
-      .example {
-            background-color: #1a1a1a;
-            padding: 10px 15px;
-            border-radius: 4px;
-            margin: 15px 0;
-            font-style: italic;
-            border-left: 3px solid #4CAF50; /* Зеленая граница */
-            box-shadow: 2px 2px 4px rgba(0,0,0,0.2);
-            color: #4CAF50; /* Зеленый текст */
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 20px 0;
-            box-shadow: 3px 3px 5px rgba(0,0,0,0.3);
-        }
-        th, td {
-            border: 1px solid #444;
-            padding: 10px;
-            text-align: left;
-        }
-        th {
-            background-color: #d00;
-            color: #fff;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-        }
-        td {
-            background-color: #222;
-        }
-        tr:nth-child(even) td {
-            background-color: #252525;
-        }
         
-        /* Стили для гамбургер-меню */
-        .menu-toggle {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 40px;
-            height: 30px;
-            cursor: pointer;
-            z-index: 1000;
-        }
-        .menu-toggle span {
-            display: block;
-            height: 4px;
-            width: 100%;
-            background: #d00;
-            margin: 6px 0;
-            transition: all 0.3s;
-            box-shadow: 1px 1px 2px rgba(0,0,0,0.5);
-        }
-        .menu-toggle.active span:nth-child(1) {
-            transform: rotate(45deg) translate(7px, 7px);
-        }
-        .menu-toggle.active span:nth-child(2) {
-            opacity: 0;
-        }
-        .menu-toggle.active span:nth-child(3) {
-            transform: rotate(-45deg) translate(7px, -7px);
-        }
-        
-        /* Стили для бокового меню */
-        .sidebar-menu {
-            position: fixed;
-            top: 0;
-            right: -300px;
-            width: 250px;
-            height: 100%;
-            background: #222;
-            box-shadow: -2px 0 10px rgba(0,0,0,0.5);
-            padding: 70px 20px 20px;
-            transition: right 0.3s ease;
-            z-index: 999;
-            overflow-y: auto;
-            border-left: 3px solid #d00;
-        }
-        .sidebar-menu.active {
-            right: 0;
-        }
-        .menu-button {
-            display: block;
-            width: 100%;
-            padding: 12px;
-            margin-bottom: 12px;
-            background-color: #333;
-            color: #fff;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            text-align: left;
-            transition: all 0.3s;
-            font-weight: bold;
-            box-shadow: 2px 2px 4px rgba(0,0,0,0.3);
-            border-left: 3px solid #d00;
-        }
-        .menu-button:hover {
-            background-color: #d00;
-            transform: translateX(5px);
-        }
-        .menu-button.active {
-            background-color: #d00;
-            box-shadow: 3px 3px 5px rgba(0,0,0,0.4);
-        }
-        
-        /* Затемнение фона */
-        .overlay {
-            position: fixed;
+        #startScreen, #waitingScreen, #gameOverScreen {
+            position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.7);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.3s;
-            z-index: 998;
-        }
-        .overlay.active {
-            opacity: 1;
-            visibility: visible;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 10;
         }
         
-        /* 3D эффекты */
-        .rule, .sidebar-menu, table, .example {
-            transform: perspective(500px);
-            transform-style: preserve-3d;
+        #waitingScreen, #gameOverScreen {
+            display: none;
         }
-        .rule {
-            transform: translateZ(10px);
+        
+        h1 {
+            color: #4CAF50;
+            text-shadow: 0 0 10px #4CAF50;
+            margin-bottom: 20px;
         }
-        .sidebar-menu {
-            transform: translateZ(20px);
+        
+        button {
+            padding: 12px 24px;
+            font-size: 18px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
         }
-        .menu-button:hover {
-            transform: perspective(500px) rotateY(5deg) translateX(5px);
+        
+        button:hover {
+            background-color: #45a049;
+            transform: scale(1.05);
         }
-        th {
-            transform: translateZ(15px);
+        
+        #gameInfo {
+            display: flex;
+            justify-content: space-between;
+            width: 800px;
+            margin-top: 10px;
+        }
+        
+        #playerInfo {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .playerStats {
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #222;
+        }
+        
+        #player1Stats {
+            border-left: 4px solid #4CAF50;
+        }
+        
+        #player2Stats {
+            border-left: 4px solid #2196F3;
+        }
+        
+        #gameLink {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            word-break: break-all;
+            max-width: 90%;
+            text-align: center;
+            cursor: pointer;
+        }
+        
+        #copyButton {
+            padding: 8px 16px;
+            font-size: 14px;
+            margin-top: 10px;
+            background-color: #2196F3;
+        }
+        
+        #copyButton:hover {
+            background-color: #0b7dda;
+        }
+        
+        #controlsInfo {
+            margin-top: 30px;
+            text-align: center;
+            font-size: 16px;
+            color: #aaa;
+        }
+        
+        .healthBar {
+            height: 10px;
+            background-color: #333;
+            border-radius: 5px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .healthFill {
+            height: 100%;
+            width: 100%;
+            background-color: #4CAF50;
+            transition: width 0.3s;
+        }
+        
+        #baseHealthBar {
+            width: 200px;
+        }
+        
+        .playerHealthBar {
+            width: 100px;
         }
     </style>
 </head>
 <body>
-    <div class="menu-toggle" onclick="toggleMenu()">
-        <span></span>
-        <span></span>
-        <span></span>
-    </div>
+    <h1>ЗАЩИТА БАЗЫ ОТ ЗОМБИ</h1>
     
-    <!-- Боковое меню -->
-    <div class="sidebar-menu">
-        <button class="menu-button active" onclick="showRule('rule1')">1) Виды связи</button>
-        <button class="menu-button" onclick="showRule('rule2')">2) Тире и двоеточие (сложное)</button>
-        <button class="menu-button" onclick="showRule('rule3')">3) Тире и двоеточие (простое)</button>
-        <button class="menu-button" onclick="showRule('rule4')">4) Типы сказуемых</button>
-        <button class="menu-button" onclick="showRule('rule5')">5) Односоставные предложения</button>
-        <button class="menu-button" onclick="showRule('rule6')">6) Художественные средства</button>
-        <button class="menu-button" onclick="showRule('rule7')">7) Сочинительные союзы</button>
-        <button class="menu-button" onclick="showRule('rule8')">8) Придаточные</button>
-    </div>
-    
-    <!-- Затемнение фона -->
-    <div class="overlay" onclick="toggleMenu()"></div>
-
-    <!-- Содержимое правил -->
-    <div id="rule1" class="rule active">
-      <h2>1. Виды связи в сложном предложении</h2>
-    <p><strong>Сочинительная связь</strong> - связь между частями сложного предложения(<strong>сюзы</strong>: и, а, но, или, да, однако, зато и др.).</p>
-    <div class="example"><strong>Пример 1</strong>: Я хотел пойти гулять, <strong>но</strong> начался сильный дождь.</div>
-    <div class="example"><strong>Пример 2</strong>: Дверь открылась, <strong>и</strong> в комнату вошёл незнакомец.</div>
-    
-    <p><strong>Подчинительная связь</strong> - связь между главной и придаточной частью(что, чтобы, потому что, если, когда, так как, хотя и др.) или союзных слов (который, какой, чей, где, куда и др.).</p>
-    <div class="example">Пример 1: Я знаю, <strong>что</strong> ты прав.</div>
-    <div class="example">Пример 2: Он пришёл, <strong>чтобы</strong> извиниться.</div>
-    <div class="example">Пример 3: Мы остались дома, <strong>потому что</strong> шёл дождь.</div>
-    <div class="example">Пример 4: <strong>Если</strong> ты придёшь вовремя, мы успеем в кино.</div>
-    <div class="example">Пример 5: Вот дом, <strong>в котором</strong> я вырос.</div>
-    <div class="example">Пример 6: Я не помню, <strong>когда</strong> это произошло.</div>
-    <div class="example">Пример 7: <strong>Хотя</strong> было поздно, дети не спали.</div>
-    
-    <p><strong>Бессоюзная связь</strong> - связь между частями сложного предложения без союзов, только по смыслу и интонации.</p>
-    <div class="example">Пример 1: Поезд тронулся, перрон остался позади.</div>
-    <div class="example">Пример 2: Смеркалось; мы решили возвращаться.</div>
-    <div class="example">Пример 3: Люблю тебя: ты мне дорог.</div>
-    <div class="example">Пример 4: Сделал дело — гуляй смело.</div>
-    <div class="example">Пример 5: Метель не утихала; дорогу замело.</div>
-    <div class="example">Пример 6: Он ошибся: неправильно понял задание.</div>
-    <div class="example">Пример 7: Утро вечера мудренее — так говорила бабушка.</div>
-    <div class="example">Пример 8: Деревья шумели; ветер гнул их к земле; где-то вдали сверкали молнии.</div>
-</div>
-    <div id="rule2" class="rule">
-    <h2>2. Тире в бессоюзном сложном предложении</h2>
-    <p>Тире ставится, если между частями предложения есть следующие отношения:</p>
-    
-    <ul>
-        <li><strong>Следствие</strong> вторая часть предложения имеет значение следствия, результата действия(можно вставить союз «так что»). 
-            <div class="example">Пример: Прозвенел звонок — дети зашли в класс. (Дети зашли в класс <em>так что</em> это было следствием звонка)</div>
-        </li>
-        
-        <li><strong>Противопоставление</strong> вторая часть противопоставлена по значению первой.(можно вставить союз «а»).
-            <div class="example">Пример: Лето припасёт — зима поест. (<em>А</em> зима поест — противопоставление)</div>
-        </li>
-        
-        <li><strong>Время и условие</strong> в первой части предложения содержится значение времени или условия того, о чём говорится во второй(можно вставить союзы «если», «когда»).
-            <div class="example">Пример: Лес рубят — щепки летят. (<em>Когда</em> лес рубят — значение времени)</div>
-            <div class="example">Пример: Захотите — приезжайте. (<em>Если</em> захотите — значение условия)</div>
-        </li>
-        
-        <li><strong>Резкая смена событий</strong> во второй части предложения действие внезапно меняется.
-            <div class="example">Пример: Он собрался было уходить — вдруг раздался звонок. (Неожиданное изменение действия)</div>
-        </li>
-        
-        <li><strong>Сравнение</strong> содержание второй части предложения сравнивается с тем, о чём говорится в первой части.(можно вставить союз «как»).
-            <div class="example">Пример: Молвит слово — соловей поёт. (Говорит <em>как</em> соловей поёт — сравнение)</div>
-        </li>
-    </ul>
-</div>
-    <div id="rule3" class="rule">
-        <h2>3. Тире и двоеточие в простом предложении</h2>
-        <p><strong>Двоеточие</strong> ставится:</p>
-        <ul>
-            <li>перед однородными членами после обобщающего слова</li>
-            <div class="example">Пример: На столе лежали фрукты: яблоки, груши и бананы.</div>
-            
-            <li>в бессоюзных предложениях с пояснением</li>
-            <div class="example">Пример: Он был настоящий друг: всегда помогал в трудную минуту.</div>
-        </ul>
-        
-        <p><strong>Тире</strong> ставится:</p>
-        <ul>
-            <li>между подлежащим и сказуемым (если оба выражены существительными или инфинитивами)</li>
-            <div class="example">Пример: Книга — источник знаний.</div>
-            
-            <li>перед обобщающим словом после однородных членов</li>
-            <div class="example">Пример: Дом, дерево, забор — всё было покрыто снегом.</div>
-        </ul>
-    </div>
-
-    <div id="rule4" class="rule">
-        <h2>4. Типы сказуемых</h2>
-        <p><strong>Простое глагольное сказуемое</strong> - выражено одним глаголом в любой форме.</p>
-        <div class="example">Пример: Он <strong>читает</strong> книгу. / Он <strong>будет читать</strong> книгу.</div>
-        
-        <p><strong>Составное глагольное сказуемое</strong> - вспомогательный глагол + инфинитив.</p>
-        <div class="example">Пример: Он <strong>начал работать</strong>. / Я <strong>хочу спать</strong>.</div>
-        
-        <p><strong>Составное именное сказуемое</strong> - глагол-связка + именная часть (сущ., прил., числ.).</p>
-        <div class="example">Пример: День <strong>был солнечный</strong>. / Он <strong>стал врачом</strong>.</div>
-    </div>
-
-<div id="rule5" class="rule">
-    <h2>5. Виды односоставных предложений</h2>
-    
-    <p><strong>Определённо-личные</strong> - подлежащее я/ты, сказуемое в форме 1/2 лица.</p>
-    <div class="example">Пример 1: <strong>Читаю</strong> новую книгу о космосе.</div>
-    <div class="example">Пример 2: <strong>Пиши</strong> разборчиво, чтобы было понятно.</div>
-    
-    <p><strong>Неопределённо-личные</strong> - действие совершается неопределёнными лицами.</p>
-    <div class="example">Пример 1: В дверь <strong>постучали</strong>.</div>
-    <div class="example">Пример 2: На собрании <strong>обсуждали</strong> новый проект.</div>
-    
-    <p><strong>Обобщённо-личные</strong> - действие относится ко всем вообще.</p>
-    <div class="example">Пример 1: <strong>Что посеешь</strong>, то и пожнёшь.</div>
-    <div class="example">Пример 2: <strong>Цыплят</strong> по осени считают.</div>
-    
-    <p><strong>Безличные</strong> - нет и не может быть подлежащего.</p>
-    <div class="example">Пример 1: В комнате <strong>стало светлее</strong>.</div>
-    <div class="example">Пример 2: На улице <strong>дует сильный ветер</strong>.</div>
-    
-    <p><strong>Назывные</strong> - только подлежащее, называющее предмет или явление.</p>
-    <div class="example">Пример 1: <strong>Ночь</strong>. <strong>Улица</strong>. <strong>Фонарь</strong>. <strong>Аптека</strong>.</div>
-    <div class="example">Пример 2: <strong>Зима</strong>. <strong>Снег</strong>. <strong>Мороз</strong>.</div>
-</div>
-    <div id="rule6" class="rule">
-    <h2>6. Средства художественной выразительности</h2>
-    
-    <p><strong>Эпитет</strong> - образное определение.</p>
-    <div class="example">Пример 1: <strong>Яростный</strong> ветер выл в трубах.</div>
-    <div class="example">Пример 2: Она смотрела <strong>ласковыми</strong> глазами.</div>
-    
-    <p><strong>Сравнение</strong> - сопоставление предметов с помощью слов "как", "словно", "будто".</p>
-    <div class="example">Пример 1: Глаза блестели, <strong>как два бриллианта</strong>.</div>
-    <div class="example">Пример 2: Туман стелился <strong>словно молочное покрывало</strong>.</div>
-    
-    <p><strong>Метафора</strong> - скрытое сравнение, переносное значение.</p>
-    <div class="example">Пример 1: В саду горели <strong>фонарики</strong> рябин (о ягодах).</div>
-    <div class="example">Пример 2: <strong>Золото</strong> листьев покрывало землю (о осенних листьях).</div>
-    
-    <p><strong>Олицетворение</strong> - наделение неживого качествами живого.</p>
-    <div class="example">Пример 1: <strong>Дождь танцевал</strong> по крышам.</div>
-    <div class="example">Пример 2: <strong>Деревья шептались</strong> между собой.</div>
-    
-    <p><strong>Гипербола</strong> - преувеличение.</p>
-    <div class="example">Пример 1: Я готов <strong>миллион раз</strong> повторить!</div>
-    <div class="example">Пример 2: У меня <strong>горы</strong> работы.</div>
-    </div>
-
-    <div id="rule7" class="rule">
-        <h2>7. Сочинительные союзы</h2>
-        <table>
-            <tr>
-                <th>Группы</th>
-                <th>Союзы</th>
-            </tr>
-            <tr>
-                <td>Соединительные</td>
-                <td>и, да (в значении и), ни ни, тоже, также, не только, но и, не столько, сколько, не то чтобы, но, не то чтобы, а</td>
-            </tr>
-            <tr>
-                <td>Разделительные</td>
-                <td>или, либо, то – то, не то – не то, или – или</td>
-            </tr>
-            <tr>
-                <td>Противительные</td>
-                <td>а, но, зато, однако (в значении но)</td>
-            </tr>
-        </table>
-        
-        <div class="example">Пример соединительных: Он <strong>не только</strong> умён, <strong>но и</strong> добр.</div>
-        <div class="example">Пример разделительных: Ты пойдёшь <strong>или</strong> я?</div>
-        <div class="example">Пример противительных: Он маленький, <strong>но</strong> сильный.</div>
-    </div>
-   <div id="rule8" class="rule">
-        <h2>8. Виды придаточных предложений</h2>
-        
-        <table>
-            <tr>
-                <th>Тип придаточного</th>
-                <th>Вопросы</th>
-                <th>Союзы и союзные слова</th>
-                <th>Примеры</th>
-            </tr>
-            <tr>
-                <td><strong>Определительные</strong></td>
-                <td>какой? чей?</td>
-                <td>который, какой, чей, где, куда, когда</td>
-                <td>Дом, <strong>в котором я живу</strong>, находится в центре.</td>
-            </tr>
-            <tr>
-                <td><strong>Изъяснительные</strong></td>
-                <td>падежные вопросы (кого? чего? и т.д.)</td>
-                <td>что, чтобы, как, будто, ли</td>
-                <td>Я знаю, <strong>что ты прав</strong>.</td>
-            </tr>
-            <tr>
-                <td><strong>Обстоятельственные:</strong></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-            <tr>
-                <td>- времени</td>
-                <td>когда? как долго?</td>
-                <td>когда, пока, как только, прежде чем</td>
-                <td><strong>Когда наступило утро</strong>, мы отправились в путь.</td>
-            </tr>
-            <tr>
-                <td>- места</td>
-                <td>где? куда? откуда?</td>
-                <td>где, куда, откуда</td>
-                <td>Я поеду туда, <strong>где ещё не был</strong>.</td>
-            </tr>
-            <tr>
-                <td>- причины</td>
-                <td>почему? отчего?</td>
-                <td>потому что, так как, ибо</td>
-                <td>Мы остались дома, <strong>потому что шёл дождь</strong>.</td>
-            </tr>
-            <tr>
-                <td>- цели</td>
-                <td>зачем? с какой целью?</td>
-                <td>чтобы, для того чтобы</td>
-                <td>Он пришёл, <strong>чтобы извиниться</strong>.</td>
-            </tr>
-            <tr>
-                <td>- условия</td>
-                <td>при каком условии?</td>
-                <td>если, ежели, когда, коли</td>
-                <td><strong>Если будет хорошая погода</strong>, мы пойдём гулять.</td>
-            </tr>
-            <tr>
-                <td>- уступки</td>
-                <td>несмотря на что?</td>
-                <td>хотя, несмотря на то что, пусть</td>
-                <td><strong>Хотя было поздно</strong>, дети не спали.</td>
-            </tr>
-            <tr>
-                <td>- следствия</td>
-                <td>что из этого следует?</td>
-                <td>так что</td>
-                <td>Дождь лил не переставая, <strong>так что дороги размыло</strong>.</td>
-            </tr>
-            <tr>
-                <td>- образа действия</td>
-                <td>как? каким образом?</td>
-                <td>как, будто, точно</td>
-                <td>Он сделал всё, <strong>как его учили</strong>.</td>
-            </tr>
-            <tr>
-                <td>- меры и степени</td>
-                <td>в какой степени? насколько?</td>
-                <td>что, настолько, так</td>
-                <td>Он был так удивлён, <strong>что не мог говорить</strong>.</td>
-            </tr>
-            <tr>
-                <td>- сравнения</td>
-                <td>как? подобно чему?</td>
-                <td>как, словно, будто, точно</td>
-                <td>Она пела, <strong>как птица</strong>.</td>
-            </tr>
-        </table>
- <h3>Виды подчинения в СПП</h3>
-    
-    <p><strong>Последовательное (цепное) подчинение</strong> - когда придаточные зависят друг от друга:</p>
-    <div class="example">Пример: Я знаю [1], что он сказал [2], когда вернулся [3].<br>
-    (Главное → 1-е придаточное → 2-е придаточное)</div>
-    
-    <p><strong>Однородное подчинение</strong> - когда несколько придаточных относятся к одному главному и отвечают на один вопрос:</p>
-    <div class="example">Пример: Я знаю [1], что он приедет [2] и что он останется у нас [3].<br>
-    (Оба придаточных относятся к "знаю" и отвечают на вопрос "что?")</div>
-    
-    <p><strong>Неоднородное (параллельное) подчинение</strong> - когда придаточные относятся к одному главному, но отвечают на разные вопросы:</p>
-    <div class="example">Пример: Когда наступило утро [1], мы отправились туда [2], где нас ждали [3].<br>
-    (1-е - времени, 2-е - места, оба относятся к главному "мы отправились")</div>
-    
-    <h3>Соподчинение (сочинение придаточных)</h3>
-    <p>Когда однородные придаточные соединены сочинительными союзами:</p>
-    <div class="example">Пример: Я знаю [1], что он приедет [2] и что он останется у нас [3].<br>
-    (Союз "и" соединяет два однородных изъяснительных придаточных)</div>
-    
-    <h3>Схемы подчинения</h3>
-    <div class="example">
-        <strong>Последовательное:</strong> [Г], (что...), (который...)<br>
-        <strong>Однородное:</strong> [Г], (что...) и (что...)<br>
-        <strong>Неоднородное:</strong> [Г], (когда...), (где...)
-    </div>
-    
-    <div class="example">
-        <strong>Важно:</strong> При анализе СПП сначала найдите главное предложение, затем определите вид каждого придаточного и тип подчинения.
-    </div>
-</div>
-        <div class="example">
-            <strong>Важно:</strong> Придаточные предложения могут стоять перед главным, после него или внутри главного предложения.
+    <div id="gameInfo">
+        <div id="playerInfo">
+            <div id="player1Stats" class="playerStats">
+                <div>Игрок 1 (Вы)</div>
+                <div>Уровень: <span id="player1Level">1</span></div>
+                <div>Опыт: <span id="player1XP">0</span>/<span id="player1MaxXP">100</span></div>
+                <div class="healthBar playerHealthBar">
+                    <div id="player1HealthFill" class="healthFill"></div>
+                </div>
+            </div>
+            <div id="player2Stats" class="playerStats">
+                <div>Игрок 2</div>
+                <div>Уровень: <span id="player2Level">1</span></div>
+                <div>Опыт: <span id="player2XP">0</span>/<span id="player2MaxXP">100</span></div>
+                <div class="healthBar playerHealthBar">
+                    <div id="player2HealthFill" class="healthFill"></div>
+                </div>
+            </div>
         </div>
-        <div class="example">
-            Пример с придаточным внутри главного: Дом, <strong>который построил Джек</strong>, был очень крепким.
+        <div class="playerStats">
+            <div>Волна: <span id="waveNumber">1</span></div>
+            <div>Зомби: <span id="zombiesLeft">0</span></div>
+            <div>База:</div>
+            <div class="healthBar" id="baseHealthBar">
+                <div id="baseHealthFill" class="healthFill"></div>
+            </div>
         </div>
     </div>
+    
+    <div id="gameContainer">
+        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        
+        <div id="startScreen">
+            <h1>КООПЕРАТИВНАЯ ЗАЩИТА</h1>
+            <p>Создайте игру или присоединитесь по ссылке</p>
+            <button id="createGameButton">СОЗДАТЬ ИГРУ</button>
+            <div id="joinGameSection" style="margin-top: 30px;">
+                <p>Или введите ID игры:</p>
+                <input type="text" id="gameIdInput" placeholder="ID игры" style="padding: 8px; width: 200px;">
+                <button id="joinGameButton" style="margin-left: 10px;">ПРИСОЕДИНИТЬСЯ</button>
+            </div>
+            <div id="controlsInfo">
+                <p>Управление: WASD или стрелки</p>
+                <p>Стрельба: Пробел или ЛКМ</p>
+                <p>Смена оружия: 1-3</p>
+            </div>
+        </div>
+        
+        <div id="waitingScreen">
+            <h1>ОЖИДАНИЕ ИГРОКА</h1>
+            <p>Отправьте эту ссылку другу:</p>
+            <div id="gameLink">Загрузка...</div>
+            <button id="copyButton">КОПИРОВАТЬ ССЫЛКУ</button>
+            <p id="joinStatus">Ожидание второго игрока...</p>
+        </div>
+        
+        <div id="gameOverScreen">
+            <h1 id="gameOverTitle">ИГРА ОКОНЧЕНА</h1>
+            <p id="gameOverMessage">Вы достигли волны <span id="finalWave">0</span>!</p>
+            <button id="playAgainButton">ИГРАТЬ СНОВА</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
     <script>
-        function toggleMenu() {
-            const menu = document.querySelector('.sidebar-menu');
-            const toggle = document.querySelector('.menu-toggle');
-            const overlay = document.querySelector('.overlay');
-            
-            menu.classList.toggle('active');
-            toggle.classList.toggle('active');
-            overlay.classList.toggle('active');
+        // Конфигурация Firebase (замените на свою)
+        const firebaseConfig = {
+            apiKey: "AIzaSyDvWXW5Z5X5Z5X5Z5X5Z5X5Z5X5Z5X5Z5X5",
+            authDomain: "zombie-defense-game.firebaseapp.com",
+            databaseURL: "https://zombie-defense-game-default-rtdb.firebaseio.com",
+            projectId: "zombie-defense-game",
+            storageBucket: "zombie-defense-game.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:5X5X5X5X5X5X5X5X5X5X5X"
+        };
+        
+        // Инициализация Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // Игровые переменные
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startScreen = document.getElementById('startScreen');
+        const waitingScreen = document.getElementById('waitingScreen');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const createGameButton = document.getElementById('createGameButton');
+        const joinGameButton = document.getElementById('joinGameButton');
+        const playAgainButton = document.getElementById('playAgainButton');
+        const copyButton = document.getElementById('copyButton');
+        const gameLink = document.getElementById('gameLink');
+        const joinStatus = document.getElementById('joinStatus');
+        
+        let gameRunning = false;
+        let gameId = null;
+        let playerId = null;
+        let isHost = false;
+        let gameState = {};
+        let localPlayer = {};
+        let otherPlayer = {};
+        let zombies = [];
+        let bullets = [];
+        let powerUps = [];
+        let explosions = [];
+        let keys = {};
+        let mouse = { x: 0, y: 0, clicked: false };
+        let lastShotTime = 0;
+        let gameTime = 0;
+        let waveNumber = 1;
+        let zombiesInWave = 10;
+        let zombiesSpawned = 0;
+        let zombiesKilled = 0;
+        let lastZombieSpawn = 0;
+        let zombieSpawnDelay = 2000;
+        let background = [];
+        
+        // Создаем фон (траву и камни)
+        for (let i = 0; i < 100; i++) {
+            background.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                type: Math.random() > 0.7 ? 'rock' : 'grass',
+                size: Math.random() * 10 + 5
+            });
         }
         
-        function showRule(ruleId) {
-            // Скрываем все разделы
-            document.querySelectorAll('.rule').forEach(rule => {
-                rule.classList.remove('active');
-            });
+        // Оружие
+        const weapons = {
+            pistol: {
+                name: "Пистолет",
+                damage: 10,
+                fireRate: 500,
+                range: 300,
+                ammo: Infinity,
+                color: "#ff5555",
+                size: 5
+            },
+            rifle: {
+                name: "Винтовка",
+                damage: 25,
+                fireRate: 300,
+                range: 400,
+                ammo: 30,
+                color: "#55ff55",
+                size: 7
+            },
+            shotgun: {
+                name: "Дробовик",
+                damage: 40,
+                fireRate: 1000,
+                range: 200,
+                ammo: 8,
+                color: "#5555ff",
+                size: 8,
+                spread: 5,
+                pellets: 5
+            }
+        };
+        
+        // Инициализация игроков
+        function initPlayers() {
+            localPlayer = {
+                id: playerId,
+                x: isHost ? 200 : 600,
+                y: 400,
+                width: 30,
+                height: 40,
+                speed: 3,
+                health: 100,
+                maxHealth: 100,
+                level: 1,
+                xp: 0,
+                maxXP: 100,
+                weapon: 'pistol',
+                ammo: {
+                    pistol: Infinity,
+                    rifle: 30,
+                    shotgun: 8
+                },
+                color: isHost ? '#4CAF50' : '#2196F3',
+                direction: 0, // угол направления (в радианах)
+                kills: 0,
+                damageDealt: 0
+            };
             
-            // Убираем активный класс у всех кнопок
-            document.querySelectorAll('.menu-button').forEach(button => {
-                button.classList.remove('active');
-            });
-            
-            // Показываем выбранный раздел
-            document.getElementById(ruleId).classList.add('active');
-            
-            // Делаем кнопку активной
-            event.target.classList.add('active');
-            
-            // Закрываем меню после выбора
-            toggleMenu();
+            otherPlayer = {
+                id: null,
+                x: isHost ? 600 : 200,
+                y: 400,
+                width: 30,
+                height: 40,
+                color: isHost ? '#2196F3' : '#4CAF50',
+                direction: 0,
+                health: 100,
+                level: 1,
+                xp: 0,
+                weapon: 'pistol'
+            };
         }
         
-        // По умолчанию показываем первый раздел
-        document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('rule1').classList.add('active');
-            document.querySelector('.menu-button').classList.add('active');
+        // Инициализация базы
+        const base = {
+            x: canvas.width / 2,
+            y: canvas.height - 50,
+            width: 100,
+            height: 20,
+            health: 200,
+            maxHealth: 200
+        };
+        
+        // Обработчики кнопок
+        createGameButton.addEventListener('click', createGame);
+        joinGameButton.addEventListener('click', joinGame);
+        playAgainButton.addEventListener('click', resetGame);
+        copyButton.addEventListener('click', copyGameLink);
+        
+        // Обработчики ввода
+        window.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
+            
+            // Смена оружия
+            if (e.key === '1') localPlayer.weapon = 'pistol';
+            if (e.key === '2') localPlayer.weapon = 'rifle';
+            if (e.key === '3') localPlayer.weapon = 'shotgun';
         });
+        
+        window.addEventListener('keyup', (e) => {
+            keys[e.key] = false;
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mouse.x = e.clientX - rect.left;
+            mouse.y = e.clientY - rect.top;
+        });
+        
+        canvas.addEventListener('mousedown', (e) => {
+            if (e.button === 0) mouse.clicked = true;
+        });
+        
+        canvas.addEventListener('mouseup', (e) => {
+            if (e.button === 0) mouse.clicked = false;
+        });
+        
+        // Создание новой игры
+        function createGame() {
+            gameId = generateGameId();
+            playerId = generatePlayerId();
+            isHost = true;
+            
+            initPlayers();
+            startScreen.style.display = 'none';
+            waitingScreen.style.display = 'flex';
+            
+            // Установить URL для совместного использования
+            const url = `${window.location.origin}${window.location.pathname}?game=${gameId}`;
+            gameLink.textContent = url;
+            
+            // Создать игру в Firebase
+            const gameRef = database.ref(`games/${gameId}`);
+            
+            gameRef.set({
+                host: playerId,
+                player1: {
+                    id: playerId,
+                    x: localPlayer.x,
+                    y: localPlayer.y,
+                    health: localPlayer.health,
+                    level: localPlayer.level,
+                    xp: localPlayer.xp,
+                    weapon: localPlayer.weapon,
+                    direction: localPlayer.direction
+                },
+                player2: null,
+                zombies: {},
+                bullets: {},
+                baseHealth: base.health,
+                wave: 1,
+                gameState: 'waiting', // waiting, playing, gameover
+                createdAt: firebase.database.ServerValue.TIMESTAMP
+            });
+            
+            // Слушатель изменений в игре
+            gameRef.on('value', (snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+                
+                if (data.player2) {
+                    joinStatus.textContent = "Игрок 2 присоединился! Начинаем игру...";
+                    otherPlayer.id = data.player2.id;
+                    
+                    if (data.gameState === 'playing') {
+                        startGame();
+                    }
+                }
+            });
+        }
+        
+        // Присоединение к игре
+        function joinGame() {
+            gameId = document.getElementById('gameIdInput').value.trim();
+            if (!gameId) return;
+            
+            playerId = generatePlayerId();
+            isHost = false;
+            
+            initPlayers();
+            startScreen.style.display = 'none';
+            waitingScreen.style.display = 'flex';
+            joinStatus.textContent = "Подключение к игре...";
+            
+            const gameRef = database.ref(`games/${gameId}`);
+            
+            gameRef.once('value').then((snapshot) => {
+                const data = snapshot.val();
+                if (!data) {
+                    joinStatus.textContent = "Игра не найдена!";
+                    return;
+                }
+                
+                if (data.player2) {
+                    joinStatus.textContent = "Игра уже заполнена!";
+                    return;
+                }
+                
+                // Присоединиться как игрок 2
+                gameRef.update({
+                    player2: {
+                        id: playerId,
+                        x: localPlayer.x,
+                        y: localPlayer.y,
+                        health: localPlayer.health,
+                        level: localPlayer.level,
+                        xp: localPlayer.xp,
+                        weapon: localPlayer.weapon,
+                        direction: localPlayer.direction
+                    },
+                    gameState: 'playing'
+                });
+                
+                // Слушатель изменений в игре
+                gameRef.on('value', (snapshot) => {
+                    const data = snapshot.val();
+                    if (!data) return;
+                    
+                    if (data.gameState === 'playing') {
+                        startGame();
+                    }
+                });
+            });
+        }
+        
+        // Начало игры
+        function startGame() {
+            waitingScreen.style.display = 'none';
+            gameRunning = true;
+            
+            // Инициализация состояния игры
+            waveNumber = 1;
+            zombiesInWave = 10;
+            zombiesSpawned = 0;
+            zombiesKilled = 0;
+            zombieSpawnDelay = 2000;
+            
+            // Запуск игрового цикла
+            gameLoop();
+        }
+        
+        // Игровой цикл
+        function gameLoop() {
+            if (!gameRunning) return;
+            
+            // Обновление времени
+            gameTime += 16; // примерно 60 FPS
+            
+            // Получение состояния игры из Firebase
+            syncGameState();
+            
+            // Обновление локального игрока
+            updateLocalPlayer();
+            
+            // Спавн зомби
+            if (zombiesSpawned < zombiesInWave && gameTime - lastZombieSpawn > zombieSpawnDelay) {
+                spawnZombie();
+                lastZombieSpawn = gameTime;
+                zombieSpawnDelay = Math.max(500, 2000 - waveNumber * 100); // Увеличиваем скорость спавна с волнами
+            }
+            
+            // Обновление зомби
+            updateZombies();
+            
+            // Обновление пуль
+            updateBullets();
+            
+            // Обновление анимаций взрывов
+            updateExplosions();
+            
+            // Обновление бонусов
+            updatePowerUps();
+            
+            // Проверка условий победы/поражения
+            checkGameConditions();
+            
+            // Отрисовка игры
+            drawGame();
+            
+            // Продолжение цикла
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Синхронизация состояния игры
+        function syncGameState() {
+            const gameRef = database.ref(`games/${gameId}`);
+            
+            gameRef.once('value').then((snapshot) => {
+                const data = snapshot.val();
+                if (!data) return;
+                
+                // Обновление состояния игры
+                waveNumber = data.wave || 1;
+                base.health = data.baseHealth || base.maxHealth;
+                
+                // Обновление другого игрока
+                if (isHost && data.player2) {
+                    otherPlayer = {
+                        ...otherPlayer,
+                        x: data.player2.x,
+                        y: data.player2.y,
+                        health: data.player2.health,
+                        level: data.player2.level,
+                        xp: data.player2.xp,
+                        weapon: data.player2.weapon,
+                        direction: data.player2.direction
+                    };
+                } else if (!isHost && data.player1) {
+                    otherPlayer = {
+                        ...otherPlayer,
+                        x: data.player1.x,
+                        y: data.player1.y,
+                        health: data.player1.health,
+                        level: data.player1.level,
+                        xp: data.player1.xp,
+                        weapon: data.player1.weapon,
+                        direction: data.player1.direction
+                    };
+                }
+                
+                // Обновление зомби
+                zombies = [];
+                if (data.zombies) {
+                    Object.values(data.zombies).forEach(zombie => {
+                        zombies.push(zombie);
+                    });
+                }
+                
+                // Обновление пуль
+                bullets = [];
+                if (data.bullets) {
+                    Object.values(data.bullets).forEach(bullet => {
+                        bullets.push(bullet);
+                    });
+                }
+                
+                // Обновление UI
+                updateUI();
+            });
+        }
+        
+        // Обновление локального игрока
+        function updateLocalPlayer() {
+            // Движение
+            let dx = 0, dy = 0;
+            if (keys['w'] || keys['ArrowUp']) dy -= localPlayer.speed;
+            if (keys['s'] || keys['ArrowDown']) dy += localPlayer.speed;
+            if (keys['a'] || keys['ArrowLeft']) dx -= localPlayer.speed;
+            if (keys['d'] || keys['ArrowRight']) dx += localPlayer.speed;
+            
+            // Нормализация диагонального движения
+            if (dx !== 0 && dy !== 0) {
+                const len = Math.sqrt(dx * dx + dy * dy);
+                dx = (dx / len) * localPlayer.speed;
+                dy = (dy / len) * localPlayer.speed;
+            }
+            
+            localPlayer.x += dx;
+            localPlayer.y += dy;
+            
+            // Границы игрового поля
+            localPlayer.x = Math.max(localPlayer.width / 2, Math.min(canvas.width - localPlayer.width / 2, localPlayer.x));
+            localPlayer.y = Math.max(localPlayer.height / 2, Math.min(canvas.height - localPlayer.height / 2, localPlayer.y));
+            
+            // Направление взгляда (к курсору)
+            localPlayer.direction = Math.atan2(mouse.y - localPlayer.y, mouse.x - localPlayer.x);
+            
+            // Стрельба
+            if ((mouse.clicked || keys[' ']) && gameTime - lastShotTime > weapons[localPlayer.weapon].fireRate) {
+                shoot();
+                lastShotTime = gameTime;
+            }
+            
+            // Обновление в Firebase
+            const playerPath = isHost ? `player1` : `player2`;
+            database.ref(`games/${gameId}/${playerPath}`).update({
+                x: localPlayer.x,
+                y: localPlayer.y,
+                direction: localPlayer.direction,
+                weapon: localPlayer.weapon
+            });
+        }
+        
+        // Стрельба
+        function shoot() {
+            const weapon = weapons[localPlayer.weapon];
+            
+            if (weapon.ammo !== Infinity && localPlayer.ammo[localPlayer.weapon] <= 0) {
+                return; // Нет патронов
+            }
+            
+            if (weapon.ammo !== Infinity) {
+                localPlayer.ammo[localPlayer.weapon]--;
+            }
+            
+            // Создание пуль
+            if (localPlayer.weapon === 'shotgun') {
+                // Для дробовика создаем несколько пуль с разбросом
+                for (let i = 0; i < weapon.pellets; i++) {
+                    const angle = localPlayer.direction + (Math.random() - 0.5) * weapon.spread * 0.1;
+                    createBullet(localPlayer.x, localPlayer.y, angle, localPlayer.weapon);
+                }
+            } else {
+                createBullet(localPlayer.x, localPlayer.y, localPlayer.direction, localPlayer.weapon);
+            }
+            
+            // Звук выстрела
+            playSound('shoot');
+        }
+        
+        // Создание пули
+        function createBullet(x, y, angle, weaponType) {
+            const weapon = weapons[weaponType];
+            const bulletId = generateBulletId();
+            
+            const bullet = {
+                id: bulletId,
+                x: x,
+                y: y,
+                dx: Math.cos(angle) * 10,
+                dy: Math.sin(angle) * 10,
+                damage: weapon.damage,
+                range: weapon.range,
+                color: weapon.color,
+                size: weapon.size,
+                owner: playerId,
+                weapon: weaponType,
+                distance: 0
+            };
+            
+            // Добавление в Firebase
+            database.ref(`games/${gameId}/bullets/${bulletId}`).set(bullet);
+        }
+        
+        // Спавн зомби
+        function spawnZombie() {
+            if (!isHost) return;
+            
+            const zombieId = generateZombieId();
+            const angle = Math.random() * Math.PI * 2;
+            const distance = 500 + Math.random() * 200;
+            
+            const zombie = {
+                id: zombieId,
+                x: base.x + Math.cos(angle) * distance,
+                y: base.y + Math.sin(angle) * distance,
+                width: 30,
+                height: 40,
+                speed: 1 + waveNumber * 0.1,
+                health: 30 + waveNumber * 5,
+                maxHealth: 30 + waveNumber * 5,
+                damage: 5 + waveNumber,
+                color: `hsl(${Math.random() * 60}, 70%, 30%)`,
+                target: Math.random() > 0.5 ? 'player1' : 'player2' // Цель (игрок или база)
+            };
+            
+            // Корректировка позиции, если за пределами карты
+            zombie.x = Math.max(0, Math.min(canvas.width, zombie.x));
+            zombie.y = Math.max(0, Math.min(canvas.height, zombie.y));
+            
+            zombiesSpawned++;
+            
+            // Добавление в Firebase
+            database.ref(`games/${gameId}/zombies/${zombieId}`).set(zombie);
+        }
+        
+        // Обновление зомби
+        function updateZombies() {
+            if (!isHost) return;
+            
+            const zombiesRef = database.ref(`games/${gameId}/zombies`);
+            const updates = {};
+            
+            zombies.forEach(zombie => {
+                // Определение цели
+                let targetX, targetY;
+                if (zombie.target === 'player1') {
+                    targetX = gameState.player1?.x || base.x;
+                    targetY = gameState.player1?.y || base.y;
+                } else if (zombie.target === 'player2') {
+                    targetX = gameState.player2?.x || base.x;
+                    targetY = gameState.player2?.y || base.y;
+                } else {
+                    targetX = base.x;
+                    targetY = base.y;
+                }
+                
+                // Движение к цели
+                const dx = targetX - zombie.x;
+                const dy = targetY - zombie.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 10) {
+                    zombie.x += (dx / distance) * zombie.speed;
+                    zombie.y += (dy / distance) * zombie.speed;
+                } else {
+                    // Атака цели
+                    if (zombie.target === 'player1' && gameState.player1) {
+                        updates[`player1/health`] = Math.max(0, gameState.player1.health - zombie.damage * 0.1);
+                    } else if (zombie.target === 'player2' && gameState.player2) {
+                        updates[`player2/health`] = Math.max(0, gameState.player2.health - zombie.damage * 0.1);
+                    } else {
+                        updates[`baseHealth`] = Math.max(0, gameState.baseHealth - zombie.damage * 0.1);
+                    }
+                }
+                
+                // Обновление позиции зомби
+                updates[`zombies/${zombie.id}/x`] = zombie.x;
+                updates[`zombies/${zombie.id}/y`] = zombie.y;
+            });
+            
+            // Применение обновлений
+            if (Object.keys(updates).length > 0) {
+                database.ref(`games/${gameId}`).update(updates);
+            }
+        }
+        
+        // Обновление пуль
+        function updateBullets() {
+            if (!isHost) return;
+            
+            const bulletsRef = database.ref(`games/${gameId}/bullets`);
+            const updates = {};
+            
+            bullets.forEach(bullet => {
+                // Обновление позиции
+                bullet.x += bullet.dx;
+                bullet.y += bullet.dy;
+                bullet.distance += Math.sqrt(bullet.dx * bullet.dx + bullet.dy * bullet.dy);
+                
+                // Проверка на выход за пределы карты или максимальную дистанцию
+                if (bullet.x < 0 || bullet.x > canvas.width || 
+                    bullet.y < 0 || bullet.y > canvas.height ||
+                    bullet.distance > bullet.range) {
+                    updates[`bullets/${bullet.id}`] = null; // Удаление пули
+                    return;
+                }
+                
+                // Проверка столкновений с зомби
+                for (let i = 0; i < zombies.length; i++) {
+                    const zombie = zombies[i];
+                    const dx = bullet.x - zombie.x;
+                    const dy = bullet.y - zombie.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (distance < 20) { // Упрощенная проверка столкновения
+                        // Нанесение урона
+                        updates[`zombies/${zombie.id}/health`] = zombie.health - bullet.damage;
+                        
+                        // Удаление пули
+                        updates[`bullets/${bullet.id}`] = null;
+                        
+                        // Проверка на смерть зомби
+                        if (zombie.health - bullet.damage <= 0) {
+                            zombiesKilled++;
+                            
+                            // Награда игроку
+                            if (bullet.owner === gameState.player1?.id) {
+                                updates[`player1/xp`] = (gameState.player1?.xp || 0) + 10;
+                                updates[`player1/kills`] = (gameState.player1?.kills || 0) + 1;
+                                updates[`player1/damageDealt`] = (gameState.player1?.damageDealt || 0) + bullet.damage;
+                            } else if (bullet.owner === gameState.player2?.id) {
+                                updates[`player2/xp`] = (gameState.player2?.xp || 0) + 10;
+                                updates[`player2/kills`] = (gameState.player2?.kills || 0) + 1;
+                                updates[`player2/damageDealt`] = (gameState.player2?.damageDealt || 0) + bullet.damage;
+                            }
+                            
+                            // Спавн бонуса (20% шанс)
+                            if (Math.random() < 0.2) {
+                                spawnPowerUp(zombie.x, zombie.y);
+                            }
+                        }
+                        
+                        break;
+                    }
+                }
+                
+                // Обновление позиции пули, если не было столкновения
+                if (!updates[`bullets/${bullet.id}`]) {
+                    updates[`bullets/${bullet.id}/x`] = bullet.x;
+                    updates[`bullets/${bullet.id}/y`] = bullet.y;
+                    updates[`bullets/${bullet.id}/distance`] = bullet.distance;
+                }
+            });
+            
+            // Применение обновлений
+            if (Object.keys(updates).length > 0) {
+                database.ref(`games/${gameId}`).update(updates);
+            }
+        }
+        
+        // Спавн бонуса
+        function spawnPowerUp(x, y) {
+            if (!isHost) return;
+            
+            const powerUpId = generatePowerUpId();
+            const types = ['health', 'ammo', 'damage'];
+            const type = types[Math.floor(Math.random() * types.length)];
+            
+            const powerUp = {
+                id: powerUpId,
+                x: x,
+                y: y,
+                type: type,
+                width: 20,
+                height: 20,
+                color: type === 'health' ? '#ff5555' : type === 'ammo' ? '#5555ff' : '#ffff55'
+            };
+            
+            database.ref(`games/${gameId}/powerUps/${powerUpId}`).set(powerUp);
+        }
+        
+        // Обновление бонусов
+        function updatePowerUps() {
+            // Логика для подбора бонусов (реализуйте по аналогии с другими системами)
+        }
+        
+        // Обновление анимаций взрывов
+        function updateExplosions() {
+            for (let i = explosions.length - 1; i >= 0; i--) {
+                explosions[i].timer--;
+                if (explosions[i].timer <= 0) {
+                    explosions.splice(i, 1);
+                }
+            }
+        }
+        
+        // Проверка условий игры
+        function checkGameConditions() {
+            if (!isHost) return;
+            
+            const updates = {};
+            
+            // Проверка на завершение волны
+            if (zombiesKilled >= zombiesInWave && zombies.length === 0) {
+                waveNumber++;
+                zombiesInWave = 10 + waveNumber * 5;
+                zombiesSpawned = 0;
+                zombiesKilled = 0;
+                
+                updates['wave'] = waveNumber;
+                
+                // Восстановление здоровья базы между волнами
+                updates['baseHealth'] = Math.min(base.maxHealth, gameState.baseHealth + 20);
+            }
+            
+            // Проверка на проигрыш (разрушение базы)
+            if (gameState.baseHealth <= 0) {
+                updates['gameState'] = 'gameover';
+                gameOver();
+            }
+            
+            // Проверка на смерть игроков
+            if (gameState.player1?.health <= 0 && gameState.player2?.health <= 0) {
+                updates['gameState'] = 'gameover';
+                gameOver();
+            }
+            
+            // Проверка повышения уровня
+            if (gameState.player1?.xp >= gameState.player1?.maxXP) {
+                updates['player1/level'] = (gameState.player1?.level || 1) + 1;
+                updates['player1/xp'] = 0;
+                updates['player1/maxXP'] = 100 + (updates['player1/level'] - 1) * 50;
+                updates['player1/maxHealth'] = 100 + (updates['player1/level'] - 1) * 20;
+                updates['player1/health'] = updates['player1/maxHealth'];
+            }
+            
+            if (gameState.player2?.xp >= gameState.player2?.maxXP) {
+                updates['player2/level'] = (gameState.player2?.level || 1) + 1;
+                updates['player2/xp'] = 0;
+                updates['player2/maxXP'] = 100 + (updates['player2/level'] - 1) * 50;
+                updates['player2/maxHealth'] = 100 + (updates['player2/level'] - 1) * 20;
+                updates['player2/health'] = updates['player2/maxHealth'];
+            }
+            
+            // Применение обновлений
+            if (Object.keys(updates).length > 0) {
+                database.ref(`games/${gameId}`).update(updates);
+            }
+        }
+        
+        // Конец игры
+        function gameOver() {
+            gameRunning = false;
+            
+            // Обновление экрана завершения игры
+            document.getElementById('finalWave').textContent = waveNumber;
+            
+            if (base.health <= 0) {
+                document.getElementById('gameOverTitle').textContent = "БАЗА РАЗРУШЕНА";
+                document.getElementById('gameOverMessage').textContent = `Вы защищали базу до волны ${waveNumber}, но зомби победили.`;
+            } else {
+                document.getElementById('gameOverTitle').textContent = "ВСЕ ИГРОКИ МЕРТВЫ";
+                document.getElementById('gameOverMessage').textContent = `Вы достигли волны ${waveNumber}, но не смогли устоять перед ордами зомби.`;
+            }
+            
+            gameOverScreen.style.display = 'flex';
+        }
+        
+        // Сброс игры
+        function resetGame() {
+            // Удаление игры из Firebase
+            if (isHost) {
+                database.ref(`games/${gameId}`).remove();
+            }
+            
+            // Сброс состояния
+            gameOverScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
+            
+            // Очистка
+            zombies = [];
+            bullets = [];
+            powerUps = [];
+            explosions = [];
+        }
+        
+        // Отрисовка игры
+        function drawGame() {
+            // Очистка холста
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Рисование фона
+            ctx.fillStyle = '#0a0a0a';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Рисование травы и камней
+            background.forEach(item => {
+                ctx.fillStyle = item.type === 'rock' ? '#777' : '#0a5a0a';
+                ctx.beginPath();
+                ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Рисование базы
+            ctx.fillStyle = '#555';
+            ctx.fillRect(base.x - base.width / 2, base.y - base.height / 2, base.width, base.height);
+            
+            // Рисование зомби
+            zombies.forEach(zombie => {
+                ctx.save();
+                ctx.translate(zombie.x, zombie.y);
+                
+                // Тело
+                ctx.fillStyle = zombie.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, zombie.width / 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Голова
+                ctx.fillStyle = '#5a2d2d';
+                ctx.beginPath();
+                ctx.arc(0, -10, 8, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Глаза
+                ctx.fillStyle = 'red';
+                ctx.beginPath();
+                ctx.arc(-4, -12, 2, 0, Math.PI * 2);
+                ctx.arc(4, -12, 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+                
+                // Полоска здоровья
+                if (zombie.health < zombie.maxHealth) {
+                    const healthWidth = 30;
+                    const healthPercent = zombie.health / zombie.maxHealth;
+                    
+                    ctx.fillStyle = '#333';
+                    ctx.fillRect(zombie.x - healthWidth / 2, zombie.y - 25, healthWidth, 5);
+                    
+                    ctx.fillStyle = healthPercent > 0.5 ? '#4CAF50' : healthPercent > 0.2 ? '#ff9800' : '#f44336';
+                    ctx.fillRect(zombie.x - healthWidth / 2, zombie.y - 25, healthWidth * healthPercent, 5);
+                }
+            });
+            
+            // Рисование пуль
+            bullets.forEach(bullet => {
+                ctx.fillStyle = bullet.color;
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, bullet.size / 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Рисование другого игрока
+            if (otherPlayer.id) {
+                ctx.save();
+                ctx.translate(otherPlayer.x, otherPlayer.y);
+                ctx.rotate(otherPlayer.direction);
+                
+                // Корпус
+                ctx.fillStyle = otherPlayer.color;
+                ctx.fillRect(-15, -20, 30, 40);
+                
+                // Голова
+                ctx.fillStyle = '#ffe0b2';
+                ctx.beginPath();
+                ctx.arc(0, -25, 10, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Оружие
+                ctx.fillStyle = '#795548';
+                ctx.fillRect(5, -5, 20, 5);
+                
+                ctx.restore();
+                
+                // Имя и уровень
+                ctx.fillStyle = 'white';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(`Игрок ${isHost ? '2' : '1'} (Ур. ${otherPlayer.level})`, otherPlayer.x, otherPlayer.y - 35);
+                
+                // Полоска здоровья
+                const healthWidth = 30;
+                const healthPercent = otherPlayer.health / 100;
+                
+                ctx.fillStyle = '#333';
+                ctx.fillRect(otherPlayer.x - healthWidth / 2, otherPlayer.y - 45, healthWidth, 5);
+                
+                ctx.fillStyle = healthPercent > 0.5 ? '#4CAF50' : healthPercent > 0.2 ? '#ff9800' : '#f44336';
+                ctx.fillRect(otherPlayer.x - healthWidth / 2, otherPlayer.y - 45, healthWidth * healthPercent, 5);
+            }
+            
+            // Рисование локального игрока
+            ctx.save();
+            ctx.translate(localPlayer.x, localPlayer.y);
+            ctx.rotate(localPlayer.direction);
+            
+            // Корпус
+            ctx.fillStyle = localPlayer.color;
+            ctx.fillRect(-15, -20, 30, 40);
+            
+            // Голова
+            ctx.fillStyle = '#ffe0b2';
+            ctx.beginPath();
+            ctx.arc(0, -25, 10, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Оружие (в зависимости от типа)
+            const weapon = weapons[localPlayer.weapon];
+            ctx.fillStyle = weapon.color;
+            ctx.fillRect(5, -5, 25, 5);
+            
+            ctx.restore();
+            
+            // Имя и уровень
+            ctx.fillStyle = 'white';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Вы (Ур. ${localPlayer.level})`, localPlayer.x, localPlayer.y - 35);
+            
+            // Полоска здоровья
+            const healthWidth = 30;
+            const healthPercent = localPlayer.health / localPlayer.maxHealth;
+            
+            ctx.fillStyle = '#333';
+            ctx.fillRect(localPlayer.x - healthWidth / 2, localPlayer.y - 45, healthWidth, 5);
+            
+            ctx.fillStyle = healthPercent > 0.5 ? '#4CAF50' : healthPercent > 0.2 ? '#ff9800' : '#f44336';
+            ctx.fillRect(localPlayer.x - healthWidth / 2, localPlayer.y - 45, healthWidth * healthPercent, 5);
+            
+            // Рисование взрывов
+            explosions.forEach(explosion => {
+                ctx.fillStyle = `rgba(255, ${100 + explosion.timer * 5}, 0, ${explosion.timer / 30})`;
+                ctx.beginPath();
+                ctx.arc(explosion.x, explosion.y, explosion.radius * (1 - explosion.timer / 30), 0, Math.PI * 2);
+                ctx.fill();
+            });
+            
+            // Рисование бонусов
+            powerUps.forEach(powerUp => {
+                ctx.fillStyle = powerUp.color;
+                ctx.fillRect(powerUp.x - powerUp.width / 2, powerUp.y - powerUp.height / 2, powerUp.width, powerUp.height);
+                
+                // Иконка бонуса
+                ctx.fillStyle = 'white';
+                ctx.font = '14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                
+                if (powerUp.type === 'health') {
+                    ctx.fillText('+', powerUp.x, powerUp.y);
+                } else if (powerUp.type === 'ammo') {
+                    ctx.fillText('»', powerUp.x, powerUp.y);
+                } else {
+                    ctx.fillText('↑', powerUp.x, powerUp.y);
+                }
+            });
+            
+            // Рисование прицела
+            ctx.strokeStyle = 'red';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(mouse.x, mouse.y, 10, 0, Math.PI * 2);
+            ctx.moveTo(mouse.x - 15, mouse.y);
+            ctx.lineTo(mouse.x - 5, mouse.y);
+            ctx.moveTo(mouse.x + 5, mouse.y);
+            ctx.lineTo(mouse.x + 15, mouse.y);
+            ctx.moveTo(mouse.x, mouse.y - 15);
+            ctx.lineTo(mouse.x, mouse.y - 5);
+            ctx.moveTo(mouse.x, mouse.y + 5);
+            ctx.lineTo(mouse.x, mouse.y + 15);
+            ctx.stroke();
+        }
+        
+        // Обновление UI
+        function updateUI() {
+            // Волна и зомби
+            document.getElementById('waveNumber').textContent = waveNumber;
+            document.getElementById('zombiesLeft').textContent = zombiesInWave - zombiesKilled;
+            
+            // Здоровье базы
+            const baseHealthPercent = base.health / base.maxHealth;
+            document.getElementById('baseHealthFill').style.width = `${baseHealthPercent * 100}%`;
+            
+            // Игрок 1 (локальный или удаленный)
+            if (isHost) {
+                document.getElementById('player1Level').textContent = localPlayer.level;
+                document.getElementById('player1XP').textContent = localPlayer.xp;
+                document.getElementById('player1MaxXP').textContent = localPlayer.maxXP;
+                document.getElementById('player1HealthFill').style.width = `${(localPlayer.health / localPlayer.maxHealth) * 100}%`;
+                
+                if (gameState.player2) {
+                    document.getElementById('player2Level').textContent = gameState.player2.level;
+                    document.getElementById('player2XP').textContent = gameState.player2.xp;
+                    document.getElementById('player2MaxXP').textContent = gameState.player2.maxXP;
+                    document.getElementById('player2HealthFill').style.width = `${(gameState.player2.health / 100) * 100}%`;
+                }
+            } else {
+                document.getElementById('player1Level').textContent = localPlayer.level;
+                document.getElementById('player1XP').textContent = localPlayer.xp;
+                document.getElementById('player1MaxXP').textContent = localPlayer.maxXP;
+                document.getElementById('player1HealthFill').style.width = `${(localPlayer.health / localPlayer.maxHealth) * 100}%`;
+                
+                if (gameState.player1) {
+                    document.getElementById('player2Level').textContent = gameState.player1.level;
+                    document.getElementById('player2XP').textContent = gameState.player1.xp;
+                    document.getElementById('player2MaxXP').textContent = gameState.player1.maxXP;
+                    document.getElementById('player2HealthFill').style.width = `${(gameState.player1.health / 100) * 100}%`;
+                }
+            }
+        }
+        
+        // Звуковые эффекты
+        function playSound(type) {
+            // Реализация звуков (можно использовать Web Audio API или заранее загруженные звуки)
+            try {
+                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioCtx.createOscillator();
+                const gainNode = audioCtx.createGain();
+                
+                if (type === 'shoot') {
+                    oscillator.type = 'square';
+                    oscillator.frequency.value = 440;
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+                } else if (type === 'explosion') {
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.value = 110;
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
+                } else if (type === 'powerup') {
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = 880;
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+                }
+                
+                oscillator.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                
+                oscillator.start();
+                oscillator.stop(audioCtx.currentTime + 0.5);
+            } catch (e) {
+                console.log("Audio error:", e);
+            }
+        }
+        
+        // Генерация ID
+        function generateGameId() {
+            return Math.random().toString(36).substr(2, 6).toUpperCase();
+        }
+        
+        function generatePlayerId() {
+            return Math.random().toString(36).substr(2, 9);
+        }
+        
+        function generateZombieId() {
+            return 'z' + Math.random().toString(36).substr(2, 5);
+        }
+        
+        function generateBulletId() {
+            return 'b' + Math.random().toString(36).substr(2, 5);
+        }
+        
+        function generatePowerUpId() {
+            return 'p' + Math.random().toString(36).substr(2, 5);
+        }
+        
+        // Копирование ссылки на игру
+        function copyGameLink() {
+            const link = gameLink.textContent;
+            navigator.clipboard.writeText(link).then(() => {
+                const originalText = copyButton.textContent;
+                copyButton.textContent = "Скопировано!";
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                }, 2000);
+            });
+        }
+        
+        // Проверка URL на наличие ID игры
+        function checkUrlForGameId() {
+            const params = new URLSearchParams(window.location.search);
+            const gameIdParam = params.get('game');
+            
+            if (gameIdParam) {
+                document.getElementById('gameIdInput').value = gameIdParam;
+                joinGameButton.click();
+            }
+        }
+        
+        // Запуск проверки URL при загрузке
+        window.addEventListener('load', checkUrlForGameId);
     </script>
 </body>
 </html>
