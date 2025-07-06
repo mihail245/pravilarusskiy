@@ -3,32 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Защита базы от зомби</title>
+    <title>Космические дуэлянты - Игра для двоих</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            background-color: #111;
-            color: white;
-            font-family: Arial, sans-serif;
+            background-color: #000;
+            color: #fff;
+            font-family: 'Arial', sans-serif;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
+            touch-action: none;
         }
         
         #gameContainer {
             position: relative;
-            width: 800px;
-            height: 600px;
-            border: 2px solid #333;
-            background-color: #000;
-            margin-top: 20px;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
         }
         
-        canvas {
+        #gameCanvas {
             display: block;
+            background-color: #000033;
+            background-image: 
+                radial-gradient(white, rgba(255,255,255,.2) 1px, transparent 1px),
+                radial-gradient(white, rgba(255,255,255,.15) 1px, transparent 1px),
+                radial-gradient(white, rgba(255,255,255,.1) 1px, transparent 1px);
+            background-size: 100px 100px, 50px 50px, 25px 25px;
+            background-position: 0 0, 20px 20px, 10px 10px;
         }
         
         #startScreen, #waitingScreen, #gameOverScreen {
@@ -50,1262 +52,984 @@
         }
         
         h1 {
-            color: #4CAF50;
-            text-shadow: 0 0 10px #4CAF50;
+            font-size: 3em;
+            color: #4af;
+            text-shadow: 0 0 10px #4af;
             margin-bottom: 20px;
         }
         
         button {
-            padding: 12px 24px;
-            font-size: 18px;
-            background-color: #4CAF50;
+            background-color: #4af;
             color: white;
             border: none;
+            padding: 15px 30px;
+            font-size: 1.2em;
             border-radius: 5px;
             cursor: pointer;
-            margin-top: 20px;
+            margin: 10px;
             transition: all 0.3s;
         }
         
         button:hover {
-            background-color: #45a049;
+            background-color: #6cf;
             transform: scale(1.05);
         }
         
-        #gameInfo {
-            display: flex;
-            justify-content: space-between;
-            width: 800px;
-            margin-top: 10px;
+        #inviteLink {
+            margin: 20px 0;
+            padding: 10px;
+            background-color: #222;
+            color: #4af;
+            border: 1px solid #4af;
+            border-radius: 5px;
+            width: 80%;
+            max-width: 500px;
+            text-align: center;
+            word-break: break-all;
+            font-family: monospace;
         }
         
         #playerInfo {
-            display: flex;
-            gap: 20px;
-        }
-        
-        .playerStats {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 5;
+            background-color: rgba(0, 0, 0, 0.5);
             padding: 10px;
             border-radius: 5px;
-            background-color: #222;
         }
         
-        #player1Stats {
-            border-left: 4px solid #4CAF50;
+        #player1Score, #player2Score {
+            font-size: 1.2em;
+            margin: 5px 0;
         }
         
-        #player2Stats {
-            border-left: 4px solid #2196F3;
+        #player1Score {
+            color: #f44;
         }
         
-        #gameLink {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #333;
-            border-radius: 5px;
-            word-break: break-all;
-            max-width: 90%;
-            text-align: center;
-            cursor: pointer;
-        }
-        
-        #copyButton {
-            padding: 8px 16px;
-            font-size: 14px;
-            margin-top: 10px;
-            background-color: #2196F3;
-        }
-        
-        #copyButton:hover {
-            background-color: #0b7dda;
+        #player2Score {
+            color: #4af;
         }
         
         #controlsInfo {
-            margin-top: 30px;
-            text-align: center;
-            font-size: 16px;
-            color: #aaa;
-        }
-        
-        .healthBar {
-            height: 10px;
-            background-color: #333;
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 5;
+            background-color: rgba(0, 0, 0, 0.5);
+            padding: 10px;
             border-radius: 5px;
-            margin-top: 5px;
-            overflow: hidden;
+            font-size: 0.9em;
         }
         
-        .healthFill {
-            height: 100%;
+        .mobile-controls {
+            display: none;
+            position: absolute;
+            bottom: 20px;
             width: 100%;
-            background-color: #4CAF50;
-            transition: width 0.3s;
+            justify-content: space-between;
+            z-index: 5;
         }
         
-        #baseHealthBar {
-            width: 200px;
+        .mobile-btn {
+            width: 80px;
+            height: 80px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.5em;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
         }
         
-        .playerHealthBar {
+        #leftBtn {
+            margin-left: 20px;
+        }
+        
+        #rightBtn {
+            margin-right: 20px;
+        }
+        
+        #fireBtn {
+            position: absolute;
+            bottom: 120px;
+            right: 30px;
             width: 100px;
+            height: 100px;
+            background-color: rgba(255, 50, 50, 0.3);
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.5em;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: manipulation;
+        }
+        
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: flex;
+            }
+            
+            #fireBtn {
+                display: flex;
+            }
+            
+            #controlsInfo {
+                display: none;
+            }
+        }
+        
+        .powerup {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .health-powerup {
+            background-color: #0f0;
+            box-shadow: 0 0 10px #0f0;
+        }
+        
+        .speed-powerup {
+            background-color: #ff0;
+            box-shadow: 0 0 10px #ff0;
+        }
+        
+        .weapon-powerup {
+            background-color: #f80;
+            box-shadow: 0 0 10px #f80;
+        }
+        
+        .explosion {
+            position: absolute;
+            border-radius: 50%;
+            background-color: #ff0;
+            box-shadow: 0 0 20px #f80;
+            transform: scale(0);
+            opacity: 1;
+            animation: explode 0.5s forwards;
+        }
+        
+        @keyframes explode {
+            to {
+                transform: scale(3);
+                opacity: 0;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>ЗАЩИТА БАЗЫ ОТ ЗОМБИ</h1>
-    
-    <div id="gameInfo">
-        <div id="playerInfo">
-            <div id="player1Stats" class="playerStats">
-                <div>Игрок 1 (Вы)</div>
-                <div>Уровень: <span id="player1Level">1</span></div>
-                <div>Опыт: <span id="player1XP">0</span>/<span id="player1MaxXP">100</span></div>
-                <div class="healthBar playerHealthBar">
-                    <div id="player1HealthFill" class="healthFill"></div>
-                </div>
-            </div>
-            <div id="player2Stats" class="playerStats">
-                <div>Игрок 2</div>
-                <div>Уровень: <span id="player2Level">1</span></div>
-                <div>Опыт: <span id="player2XP">0</span>/<span id="player2MaxXP">100</span></div>
-                <div class="healthBar playerHealthBar">
-                    <div id="player2HealthFill" class="healthFill"></div>
-                </div>
-            </div>
-        </div>
-        <div class="playerStats">
-            <div>Волна: <span id="waveNumber">1</span></div>
-            <div>Зомби: <span id="zombiesLeft">0</span></div>
-            <div>База:</div>
-            <div class="healthBar" id="baseHealthBar">
-                <div id="baseHealthFill" class="healthFill"></div>
-            </div>
-        </div>
-    </div>
-    
     <div id="gameContainer">
-        <canvas id="gameCanvas" width="800" height="600"></canvas>
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="playerInfo">
+            <div id="player1Score">Игрок 1: 0</div>
+            <div id="player2Score">Игрок 2: 0</div>
+        </div>
+        
+        <div id="controlsInfo">
+            Управление: WASD или стрелки для движения, Пробел для стрельбы<br>
+            Цель: уничтожить корабль противника 5 раз
+        </div>
+        
+        <div class="mobile-controls">
+            <div id="leftBtn" class="mobile-btn">←</div>
+            <div id="rightBtn" class="mobile-btn">→</div>
+        </div>
+        <div id="fireBtn" class="mobile-btn">🔥</div>
         
         <div id="startScreen">
-            <h1>КООПЕРАТИВНАЯ ЗАЩИТА</h1>
-            <p>Создайте игру или присоединитесь по ссылке</p>
-            <button id="createGameButton">СОЗДАТЬ ИГРУ</button>
-            <div id="joinGameSection" style="margin-top: 30px;">
-                <p>Или введите ID игры:</p>
-                <input type="text" id="gameIdInput" placeholder="ID игры" style="padding: 8px; width: 200px;">
-                <button id="joinGameButton" style="margin-left: 10px;">ПРИСОЕДИНИТЬСЯ</button>
-            </div>
-            <div id="controlsInfo">
-                <p>Управление: WASD или стрелки</p>
-                <p>Стрельба: Пробел или ЛКМ</p>
-                <p>Смена оружия: 1-3</p>
-            </div>
+            <h1>КОСМИЧЕСКИЕ ДУЭЛЯНТЫ</h1>
+            <button id="createGameBtn">Создать игру</button>
+            <button id="joinGameBtn">Присоединиться</button>
         </div>
         
         <div id="waitingScreen">
             <h1>ОЖИДАНИЕ ИГРОКА</h1>
-            <p>Отправьте эту ссылку другу:</p>
-            <div id="gameLink">Загрузка...</div>
-            <button id="copyButton">КОПИРОВАТЬ ССЫЛКУ</button>
-            <p id="joinStatus">Ожидание второго игрока...</p>
+            <div id="inviteLink">Ссылка для подключения появится здесь</div>
+            <button id="cancelWaitBtn">Отмена</button>
         </div>
         
         <div id="gameOverScreen">
             <h1 id="gameOverTitle">ИГРА ОКОНЧЕНА</h1>
-            <p id="gameOverMessage">Вы достигли волны <span id="finalWave">0</span>!</p>
-            <button id="playAgainButton">ИГРАТЬ СНОВА</button>
+            <div id="gameOverMessage"></div>
+            <button id="playAgainBtn">Играть снова</button>
         </div>
     </div>
 
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
+    
     <script>
-        // Конфигурация Firebase (замените на свою)
+        // Инициализация Firebase
         const firebaseConfig = {
-            apiKey: "AIzaSyDvWXW5Z5X5Z5X5Z5X5Z5X5Z5X5Z5X5Z5X5",
-            authDomain: "zombie-defense-game.firebaseapp.com",
-            databaseURL: "https://zombie-defense-game-default-rtdb.firebaseio.com",
-            projectId: "zombie-defense-game",
-            storageBucket: "zombie-defense-game.appspot.com",
+            apiKey: "AIzaSyDv0p5tEeJtJd4J1QaQwQ7Xq3X9X9X9X9X",
+            authDomain: "space-duel-game.firebaseapp.com",
+            databaseURL: "https://space-duel-game-default-rtdb.firebaseio.com",
+            projectId: "space-duel-game",
+            storageBucket: "space-duel-game.appspot.com",
             messagingSenderId: "123456789012",
-            appId: "1:123456789012:web:5X5X5X5X5X5X5X5X5X5X5X"
+            appId: "1:123456789012:web:abcdefghijk1234567890"
         };
         
-        // Инициализация Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
         
-        // Игровые переменные
+        // Элементы DOM
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const startScreen = document.getElementById('startScreen');
         const waitingScreen = document.getElementById('waitingScreen');
         const gameOverScreen = document.getElementById('gameOverScreen');
-        const createGameButton = document.getElementById('createGameButton');
-        const joinGameButton = document.getElementById('joinGameButton');
-        const playAgainButton = document.getElementById('playAgainButton');
-        const copyButton = document.getElementById('copyButton');
-        const gameLink = document.getElementById('gameLink');
-        const joinStatus = document.getElementById('joinStatus');
+        const createGameBtn = document.getElementById('createGameBtn');
+        const joinGameBtn = document.getElementById('joinGameBtn');
+        const cancelWaitBtn = document.getElementById('cancelWaitBtn');
+        const playAgainBtn = document.getElementById('playAgainBtn');
+        const inviteLink = document.getElementById('inviteLink');
+        const player1ScoreEl = document.getElementById('player1Score');
+        const player2ScoreEl = document.getElementById('player2Score');
+        const gameOverTitle = document.getElementById('gameOverTitle');
+        const gameOverMessage = document.getElementById('gameOverMessage');
+        const leftBtn = document.getElementById('leftBtn');
+        const rightBtn = document.getElementById('rightBtn');
+        const fireBtn = document.getElementById('fireBtn');
         
-        let gameRunning = false;
-        let gameId = null;
-        let playerId = null;
-        let isHost = false;
-        let gameState = {};
-        let localPlayer = {};
-        let otherPlayer = {};
-        let zombies = [];
-        let bullets = [];
-        let powerUps = [];
-        let explosions = [];
-        let keys = {};
-        let mouse = { x: 0, y: 0, clicked: false };
-        let lastShotTime = 0;
-        let gameTime = 0;
-        let waveNumber = 1;
-        let zombiesInWave = 10;
-        let zombiesSpawned = 0;
-        let zombiesKilled = 0;
-        let lastZombieSpawn = 0;
-        let zombieSpawnDelay = 2000;
-        let background = [];
+        // Размеры canvas
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
         
-        // Создаем фон (траву и камни)
-        for (let i = 0; i < 100; i++) {
-            background.push({
-                x: Math.random() * canvas.width,
-                y: Math.random() * canvas.height,
-                type: Math.random() > 0.7 ? 'rock' : 'grass',
-                size: Math.random() * 10 + 5
-            });
-        }
-        
-        // Оружие
-        const weapons = {
-            pistol: {
-                name: "Пистолет",
-                damage: 10,
-                fireRate: 500,
-                range: 300,
-                ammo: Infinity,
-                color: "#ff5555",
-                size: 5
-            },
-            rifle: {
-                name: "Винтовка",
-                damage: 25,
-                fireRate: 300,
-                range: 400,
-                ammo: 30,
-                color: "#55ff55",
-                size: 7
-            },
-            shotgun: {
-                name: "Дробовик",
-                damage: 40,
-                fireRate: 1000,
-                range: 200,
-                ammo: 8,
-                color: "#5555ff",
-                size: 8,
-                spread: 5,
-                pellets: 5
+        // Состояние игры
+        let gameState = {
+            phase: 'start', // start, waiting, playing, gameOver
+            playerId: null,
+            gameId: null,
+            isHost: false,
+            players: {},
+            bullets: [],
+            powerups: [],
+            explosions: [],
+            scores: { player1: 0, player2: 0 },
+            lastUpdate: 0,
+            gameStartTime: 0,
+            keys: {},
+            mobileControls: {
+                left: false,
+                right: false,
+                fire: false
             }
         };
         
-        // Инициализация игроков
-        function initPlayers() {
-            localPlayer = {
-                id: playerId,
-                x: isHost ? 200 : 600,
-                y: 400,
-                width: 30,
-                height: 40,
-                speed: 3,
-                health: 100,
-                maxHealth: 100,
-                level: 1,
-                xp: 0,
-                maxXP: 100,
-                weapon: 'pistol',
-                ammo: {
-                    pistol: Infinity,
-                    rifle: 30,
-                    shotgun: 8
-                },
-                color: isHost ? '#4CAF50' : '#2196F3',
-                direction: 0, // угол направления (в радианах)
-                kills: 0,
-                damageDealt: 0
-            };
-            
-            otherPlayer = {
-                id: null,
-                x: isHost ? 600 : 200,
-                y: 400,
-                width: 30,
-                height: 40,
-                color: isHost ? '#2196F3' : '#4CAF50',
-                direction: 0,
-                health: 100,
-                level: 1,
-                xp: 0,
-                weapon: 'pistol'
-            };
-        }
+        // Размеры игровых объектов
+        const PLAYER_SIZE = 30;
+        const BULLET_SIZE = 8;
+        const POWERUP_SIZE = 20;
         
-        // Инициализация базы
-        const base = {
-            x: canvas.width / 2,
-            y: canvas.height - 50,
-            width: 100,
-            height: 20,
-            health: 200,
-            maxHealth: 200
-        };
+        // Физика игры
+        const PLAYER_SPEED = 5;
+        const BULLET_SPEED = 10;
+        const POWERUP_SPAWN_RATE = 0.005;
+        const POWERUP_DURATION = 10000; // 10 секунд
         
-        // Обработчики кнопок
-        createGameButton.addEventListener('click', createGame);
-        joinGameButton.addEventListener('click', joinGame);
-        playAgainButton.addEventListener('click', resetGame);
-        copyButton.addEventListener('click', copyGameLink);
-        
-        // Обработчики ввода
-        window.addEventListener('keydown', (e) => {
-            keys[e.key] = true;
-            
-            // Смена оружия
-            if (e.key === '1') localPlayer.weapon = 'pistol';
-            if (e.key === '2') localPlayer.weapon = 'rifle';
-            if (e.key === '3') localPlayer.weapon = 'shotgun';
-        });
-        
-        window.addEventListener('keyup', (e) => {
-            keys[e.key] = false;
-        });
-        
-        canvas.addEventListener('mousemove', (e) => {
-            const rect = canvas.getBoundingClientRect();
-            mouse.x = e.clientX - rect.left;
-            mouse.y = e.clientY - rect.top;
-        });
-        
-        canvas.addEventListener('mousedown', (e) => {
-            if (e.button === 0) mouse.clicked = true;
-        });
-        
-        canvas.addEventListener('mouseup', (e) => {
-            if (e.button === 0) mouse.clicked = false;
-        });
-        
-        // Создание новой игры
-        function createGame() {
-            gameId = generateGameId();
-            playerId = generatePlayerId();
-            isHost = true;
-            
-            initPlayers();
-            startScreen.style.display = 'none';
-            waitingScreen.style.display = 'flex';
-            
-            // Установить URL для совместного использования
-            const url = `${window.location.origin}${window.location.pathname}?game=${gameId}`;
-            gameLink.textContent = url;
-            
-            // Создать игру в Firebase
-            const gameRef = database.ref(`games/${gameId}`);
-            
-            gameRef.set({
-                host: playerId,
-                player1: {
-                    id: playerId,
-                    x: localPlayer.x,
-                    y: localPlayer.y,
-                    health: localPlayer.health,
-                    level: localPlayer.level,
-                    xp: localPlayer.xp,
-                    weapon: localPlayer.weapon,
-                    direction: localPlayer.direction
-                },
-                player2: null,
-                zombies: {},
-                bullets: {},
-                baseHealth: base.health,
-                wave: 1,
-                gameState: 'waiting', // waiting, playing, gameover
-                createdAt: firebase.database.ServerValue.TIMESTAMP
-            });
-            
-            // Слушатель изменений в игре
-            gameRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                if (!data) return;
-                
-                if (data.player2) {
-                    joinStatus.textContent = "Игрок 2 присоединился! Начинаем игру...";
-                    otherPlayer.id = data.player2.id;
-                    
-                    if (data.gameState === 'playing') {
-                        startGame();
-                    }
-                }
-            });
-        }
-        
-        // Присоединение к игре
-        function joinGame() {
-            gameId = document.getElementById('gameIdInput').value.trim();
-            if (!gameId) return;
-            
-            playerId = generatePlayerId();
-            isHost = false;
-            
-            initPlayers();
-            startScreen.style.display = 'none';
-            waitingScreen.style.display = 'flex';
-            joinStatus.textContent = "Подключение к игре...";
-            
-            const gameRef = database.ref(`games/${gameId}`);
-            
-            gameRef.once('value').then((snapshot) => {
-                const data = snapshot.val();
-                if (!data) {
-                    joinStatus.textContent = "Игра не найдена!";
-                    return;
-                }
-                
-                if (data.player2) {
-                    joinStatus.textContent = "Игра уже заполнена!";
-                    return;
-                }
-                
-                // Присоединиться как игрок 2
-                gameRef.update({
-                    player2: {
-                        id: playerId,
-                        x: localPlayer.x,
-                        y: localPlayer.y,
-                        health: localPlayer.health,
-                        level: localPlayer.level,
-                        xp: localPlayer.xp,
-                        weapon: localPlayer.weapon,
-                        direction: localPlayer.direction
-                    },
-                    gameState: 'playing'
-                });
-                
-                // Слушатель изменений в игре
-                gameRef.on('value', (snapshot) => {
-                    const data = snapshot.val();
-                    if (!data) return;
-                    
-                    if (data.gameState === 'playing') {
-                        startGame();
-                    }
-                });
-            });
-        }
-        
-        // Начало игры
-        function startGame() {
-            waitingScreen.style.display = 'none';
-            gameRunning = true;
-            
-            // Инициализация состояния игры
-            waveNumber = 1;
-            zombiesInWave = 10;
-            zombiesSpawned = 0;
-            zombiesKilled = 0;
-            zombieSpawnDelay = 2000;
-            
-            // Запуск игрового цикла
-            gameLoop();
-        }
-        
-        // Игровой цикл
-        function gameLoop() {
-            if (!gameRunning) return;
-            
-            // Обновление времени
-            gameTime += 16; // примерно 60 FPS
-            
-            // Получение состояния игры из Firebase
-            syncGameState();
-            
-            // Обновление локального игрока
-            updateLocalPlayer();
-            
-            // Спавн зомби
-            if (zombiesSpawned < zombiesInWave && gameTime - lastZombieSpawn > zombieSpawnDelay) {
-                spawnZombie();
-                lastZombieSpawn = gameTime;
-                zombieSpawnDelay = Math.max(500, 2000 - waveNumber * 100); // Увеличиваем скорость спавна с волнами
+        // Игровые объекты
+        class Player {
+            constructor(id, x, y, color, isHost) {
+                this.id = id;
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.width = PLAYER_SIZE;
+                this.height = PLAYER_SIZE;
+                this.speed = PLAYER_SPEED;
+                this.health = 100;
+                this.isHost = isHost;
+                this.powerups = {
+                    speed: { active: false, endTime: 0 },
+                    weapon: { active: false, endTime: 0 }
+                };
+                this.lastFireTime = 0;
+                this.fireRate = 500; // мс между выстрелами
             }
             
-            // Обновление зомби
-            updateZombies();
-            
-            // Обновление пуль
-            updateBullets();
-            
-            // Обновление анимаций взрывов
-            updateExplosions();
-            
-            // Обновление бонусов
-            updatePowerUps();
-            
-            // Проверка условий победы/поражения
-            checkGameConditions();
-            
-            // Отрисовка игры
-            drawGame();
-            
-            // Продолжение цикла
-            requestAnimationFrame(gameLoop);
-        }
-        
-        // Синхронизация состояния игры
-        function syncGameState() {
-            const gameRef = database.ref(`games/${gameId}`);
-            
-            gameRef.once('value').then((snapshot) => {
-                const data = snapshot.val();
-                if (!data) return;
+            update(keys) {
+                // Движение
+                if (this.isHost ? keys.ArrowLeft : keys.KeyA) this.x -= this.speed;
+                if (this.isHost ? keys.ArrowRight : keys.KeyD) this.x += this.speed;
+                if (this.isHost ? keys.ArrowUp : keys.KeyW) this.y -= this.speed;
+                if (this.isHost ? keys.ArrowDown : keys.KeyS) this.y += this.speed;
                 
-                // Обновление состояния игры
-                waveNumber = data.wave || 1;
-                base.health = data.baseHealth || base.maxHealth;
+                // Проверка границ
+                this.x = Math.max(0, Math.min(canvas.width - this.width, this.x));
+                this.y = Math.max(0, Math.min(canvas.height - this.height, this.y));
                 
-                // Обновление другого игрока
-                if (isHost && data.player2) {
-                    otherPlayer = {
-                        ...otherPlayer,
-                        x: data.player2.x,
-                        y: data.player2.y,
-                        health: data.player2.health,
-                        level: data.player2.level,
-                        xp: data.player2.xp,
-                        weapon: data.player2.weapon,
-                        direction: data.player2.direction
-                    };
-                } else if (!isHost && data.player1) {
-                    otherPlayer = {
-                        ...otherPlayer,
-                        x: data.player1.x,
-                        y: data.player1.y,
-                        health: data.player1.health,
-                        level: data.player1.level,
-                        xp: data.player1.xp,
-                        weapon: data.player1.weapon,
-                        direction: data.player1.direction
-                    };
+                // Проверка активных powerups
+                const now = Date.now();
+                if (this.powerups.speed.active && now > this.powerups.speed.endTime) {
+                    this.powerups.speed.active = false;
+                    this.speed = PLAYER_SPEED;
                 }
                 
-                // Обновление зомби
-                zombies = [];
-                if (data.zombies) {
-                    Object.values(data.zombies).forEach(zombie => {
-                        zombies.push(zombie);
-                    });
+                if (this.powerups.weapon.active && now > this.powerups.weapon.endTime) {
+                    this.powerups.weapon.active = false;
+                    this.fireRate = 500;
                 }
-                
-                // Обновление пуль
-                bullets = [];
-                if (data.bullets) {
-                    Object.values(data.bullets).forEach(bullet => {
-                        bullets.push(bullet);
-                    });
-                }
-                
-                // Обновление UI
-                updateUI();
-            });
-        }
-        
-        // Обновление локального игрока
-        function updateLocalPlayer() {
-            // Движение
-            let dx = 0, dy = 0;
-            if (keys['w'] || keys['ArrowUp']) dy -= localPlayer.speed;
-            if (keys['s'] || keys['ArrowDown']) dy += localPlayer.speed;
-            if (keys['a'] || keys['ArrowLeft']) dx -= localPlayer.speed;
-            if (keys['d'] || keys['ArrowRight']) dx += localPlayer.speed;
-            
-            // Нормализация диагонального движения
-            if (dx !== 0 && dy !== 0) {
-                const len = Math.sqrt(dx * dx + dy * dy);
-                dx = (dx / len) * localPlayer.speed;
-                dy = (dy / len) * localPlayer.speed;
             }
             
-            localPlayer.x += dx;
-            localPlayer.y += dy;
-            
-            // Границы игрового поля
-            localPlayer.x = Math.max(localPlayer.width / 2, Math.min(canvas.width - localPlayer.width / 2, localPlayer.x));
-            localPlayer.y = Math.max(localPlayer.height / 2, Math.min(canvas.height - localPlayer.height / 2, localPlayer.y));
-            
-            // Направление взгляда (к курсору)
-            localPlayer.direction = Math.atan2(mouse.y - localPlayer.y, mouse.x - localPlayer.x);
-            
-            // Стрельба
-            if ((mouse.clicked || keys[' ']) && gameTime - lastShotTime > weapons[localPlayer.weapon].fireRate) {
-                shoot();
-                lastShotTime = gameTime;
-            }
-            
-            // Обновление в Firebase
-            const playerPath = isHost ? `player1` : `player2`;
-            database.ref(`games/${gameId}/${playerPath}`).update({
-                x: localPlayer.x,
-                y: localPlayer.y,
-                direction: localPlayer.direction,
-                weapon: localPlayer.weapon
-            });
-        }
-        
-        // Стрельба
-        function shoot() {
-            const weapon = weapons[localPlayer.weapon];
-            
-            if (weapon.ammo !== Infinity && localPlayer.ammo[localPlayer.weapon] <= 0) {
-                return; // Нет патронов
-            }
-            
-            if (weapon.ammo !== Infinity) {
-                localPlayer.ammo[localPlayer.weapon]--;
-            }
-            
-            // Создание пуль
-            if (localPlayer.weapon === 'shotgun') {
-                // Для дробовика создаем несколько пуль с разбросом
-                for (let i = 0; i < weapon.pellets; i++) {
-                    const angle = localPlayer.direction + (Math.random() - 0.5) * weapon.spread * 0.1;
-                    createBullet(localPlayer.x, localPlayer.y, angle, localPlayer.weapon);
-                }
-            } else {
-                createBullet(localPlayer.x, localPlayer.y, localPlayer.direction, localPlayer.weapon);
-            }
-            
-            // Звук выстрела
-            playSound('shoot');
-        }
-        
-        // Создание пули
-        function createBullet(x, y, angle, weaponType) {
-            const weapon = weapons[weaponType];
-            const bulletId = generateBulletId();
-            
-            const bullet = {
-                id: bulletId,
-                x: x,
-                y: y,
-                dx: Math.cos(angle) * 10,
-                dy: Math.sin(angle) * 10,
-                damage: weapon.damage,
-                range: weapon.range,
-                color: weapon.color,
-                size: weapon.size,
-                owner: playerId,
-                weapon: weaponType,
-                distance: 0
-            };
-            
-            // Добавление в Firebase
-            database.ref(`games/${gameId}/bullets/${bulletId}`).set(bullet);
-        }
-        
-        // Спавн зомби
-        function spawnZombie() {
-            if (!isHost) return;
-            
-            const zombieId = generateZombieId();
-            const angle = Math.random() * Math.PI * 2;
-            const distance = 500 + Math.random() * 200;
-            
-            const zombie = {
-                id: zombieId,
-                x: base.x + Math.cos(angle) * distance,
-                y: base.y + Math.sin(angle) * distance,
-                width: 30,
-                height: 40,
-                speed: 1 + waveNumber * 0.1,
-                health: 30 + waveNumber * 5,
-                maxHealth: 30 + waveNumber * 5,
-                damage: 5 + waveNumber,
-                color: `hsl(${Math.random() * 60}, 70%, 30%)`,
-                target: Math.random() > 0.5 ? 'player1' : 'player2' // Цель (игрок или база)
-            };
-            
-            // Корректировка позиции, если за пределами карты
-            zombie.x = Math.max(0, Math.min(canvas.width, zombie.x));
-            zombie.y = Math.max(0, Math.min(canvas.height, zombie.y));
-            
-            zombiesSpawned++;
-            
-            // Добавление в Firebase
-            database.ref(`games/${gameId}/zombies/${zombieId}`).set(zombie);
-        }
-        
-        // Обновление зомби
-        function updateZombies() {
-            if (!isHost) return;
-            
-            const zombiesRef = database.ref(`games/${gameId}/zombies`);
-            const updates = {};
-            
-            zombies.forEach(zombie => {
-                // Определение цели
-                let targetX, targetY;
-                if (zombie.target === 'player1') {
-                    targetX = gameState.player1?.x || base.x;
-                    targetY = gameState.player1?.y || base.y;
-                } else if (zombie.target === 'player2') {
-                    targetX = gameState.player2?.x || base.x;
-                    targetY = gameState.player2?.y || base.y;
-                } else {
-                    targetX = base.x;
-                    targetY = base.y;
+            draw() {
+                ctx.save();
+                ctx.fillStyle = this.color;
+                
+                // Рисуем корабль
+                ctx.beginPath();
+                ctx.moveTo(this.x + this.width/2, this.y);
+                ctx.lineTo(this.x + this.width, this.y + this.height);
+                ctx.lineTo(this.x, this.y + this.height);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Рисуем индикатор здоровья
+                ctx.fillStyle = 'red';
+                ctx.fillRect(this.x, this.y - 10, this.width * (this.health / 100), 5);
+                
+                // Рисуем индикаторы powerups
+                if (this.powerups.speed.active) {
+                    ctx.fillStyle = 'yellow';
+                    ctx.fillRect(this.x, this.y - 20, 5, 5);
                 }
                 
-                // Движение к цели
-                const dx = targetX - zombie.x;
-                const dy = targetY - zombie.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance > 10) {
-                    zombie.x += (dx / distance) * zombie.speed;
-                    zombie.y += (dy / distance) * zombie.speed;
-                } else {
-                    // Атака цели
-                    if (zombie.target === 'player1' && gameState.player1) {
-                        updates[`player1/health`] = Math.max(0, gameState.player1.health - zombie.damage * 0.1);
-                    } else if (zombie.target === 'player2' && gameState.player2) {
-                        updates[`player2/health`] = Math.max(0, gameState.player2.health - zombie.damage * 0.1);
-                    } else {
-                        updates[`baseHealth`] = Math.max(0, gameState.baseHealth - zombie.damage * 0.1);
-                    }
+                if (this.powerups.weapon.active) {
+                    ctx.fillStyle = 'orange';
+                    ctx.fillRect(this.x + 10, this.y - 20, 5, 5);
                 }
                 
-                // Обновление позиции зомби
-                updates[`zombies/${zombie.id}/x`] = zombie.x;
-                updates[`zombies/${zombie.id}/y`] = zombie.y;
-            });
+                ctx.restore();
+            }
             
-            // Применение обновлений
-            if (Object.keys(updates).length > 0) {
-                database.ref(`games/${gameId}`).update(updates);
+            fire() {
+                const now = Date.now();
+                if (now - this.lastFireTime < this.fireRate) return null;
+                
+                this.lastFireTime = now;
+                
+                return new Bullet(
+                    this.x + this.width/2 - BULLET_SIZE/2,
+                    this.y,
+                    this.isHost ? 1 : -1,
+                    this.id,
+                    this.powerups.weapon.active ? 40 : 20 // Увеличенный урон с powerup
+                );
             }
         }
         
-        // Обновление пуль
-        function updateBullets() {
-            if (!isHost) return;
+        class Bullet {
+            constructor(x, y, direction, ownerId, damage) {
+                this.x = x;
+                this.y = y;
+                this.width = BULLET_SIZE;
+                this.height = BULLET_SIZE;
+                this.direction = direction; // 1 для игрока 1 (вниз), -1 для игрока 2 (вверх)
+                this.speed = BULLET_SPEED;
+                this.ownerId = ownerId;
+                this.damage = damage;
+            }
             
-            const bulletsRef = database.ref(`games/${gameId}/bullets`);
-            const updates = {};
+            update() {
+                this.y += this.speed * this.direction;
+                return this.y < 0 || this.y > canvas.height;
+            }
             
-            bullets.forEach(bullet => {
-                // Обновление позиции
-                bullet.x += bullet.dx;
-                bullet.y += bullet.dy;
-                bullet.distance += Math.sqrt(bullet.dx * bullet.dx + bullet.dy * bullet.dy);
+            draw() {
+                ctx.save();
+                ctx.fillStyle = this.ownerId === 'player1' ? '#f44' : '#4af';
+                ctx.fillRect(this.x, this.y, this.width, this.height);
                 
-                // Проверка на выход за пределы карты или максимальную дистанцию
-                if (bullet.x < 0 || bullet.x > canvas.width || 
-                    bullet.y < 0 || bullet.y > canvas.height ||
-                    bullet.distance > bullet.range) {
-                    updates[`bullets/${bullet.id}`] = null; // Удаление пули
-                    return;
+                // Эффект для усиленных пуль
+                if (this.damage > 20) {
+                    ctx.strokeStyle = 'orange';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(this.x - 1, this.y - 1, this.width + 2, this.height + 2);
                 }
                 
-                // Проверка столкновений с зомби
-                for (let i = 0; i < zombies.length; i++) {
-                    const zombie = zombies[i];
-                    const dx = bullet.x - zombie.x;
-                    const dy = bullet.y - zombie.y;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (distance < 20) { // Упрощенная проверка столкновения
-                        // Нанесение урона
-                        updates[`zombies/${zombie.id}/health`] = zombie.health - bullet.damage;
+                ctx.restore();
+            }
+        }
+        
+        class Powerup {
+            constructor(type, x, y) {
+                this.type = type; // 'health', 'speed', 'weapon'
+                this.x = x;
+                this.y = y;
+                this.width = POWERUP_SIZE;
+                this.height = POWERUP_SIZE;
+                this.collected = false;
+            }
+            
+            draw() {
+                ctx.save();
+                
+                switch (this.type) {
+                    case 'health':
+                        ctx.fillStyle = '#0f0';
+                        break;
+                    case 'speed':
+                        ctx.fillStyle = '#ff0';
+                        break;
+                    case 'weapon':
+                        ctx.fillStyle = '#f80';
+                        break;
+                }
+                
+                ctx.beginPath();
+                ctx.arc(this.x + this.width/2, this.y + this.height/2, this.width/2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                // Анимация мерцания
+                const pulse = Math.sin(Date.now() / 200) * 0.2 + 0.8;
+                ctx.globalAlpha = pulse;
+                ctx.beginPath();
+                ctx.arc(this.x + this.width/2, this.y + this.height/2, this.width/2 * 1.5, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+            }
+        }
+        
+        class Explosion {
+            constructor(x, y, size) {
+                this.x = x;
+                this.y = y;
+                this.size = size;
+                this.startTime = Date.now();
+                this.duration = 500;
+            }
+            
+            draw() {
+                const progress = (Date.now() - this.startTime) / this.duration;
+                if (progress >= 1) return false;
+                
+                ctx.save();
+                ctx.globalAlpha = 1 - progress;
+                
+                const gradient = ctx.createRadialGradient(
+                    this.x, this.y, 0,
+                    this.x, this.y, this.size * progress * 3
+                );
+                gradient.addColorStop(0, 'yellow');
+                gradient.addColorStop(0.5, 'orange');
+                gradient.addColorStop(1, 'red');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size * progress * 3, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.restore();
+                return true;
+            }
+        }
+        
+        // Игровые функции
+        function spawnPowerup() {
+            if (Math.random() < POWERUP_SPAWN_RATE) {
+                const types = ['health', 'speed', 'weapon'];
+                const type = types[Math.floor(Math.random() * types.length)];
+                const x = Math.random() * (canvas.width - POWERUP_SIZE);
+                const y = Math.random() * (canvas.height - POWERUP_SIZE);
+                
+                return new Powerup(type, x, y);
+            }
+            return null;
+        }
+        
+        function checkCollisions() {
+            // Проверка столкновений пуль с игроками
+            gameState.bullets.forEach((bullet, bulletIndex) => {
+                Object.values(gameState.players).forEach(player => {
+                    if (bullet.ownerId !== player.id && 
+                        bullet.x < player.x + player.width &&
+                        bullet.x + bullet.width > player.x &&
+                        bullet.y < player.y + player.height &&
+                        bullet.y + bullet.height > player.y) {
                         
-                        // Удаление пули
-                        updates[`bullets/${bullet.id}`] = null;
+                        // Попадание
+                        player.health -= bullet.damage;
+                        gameState.bullets.splice(bulletIndex, 1);
                         
-                        // Проверка на смерть зомби
-                        if (zombie.health - bullet.damage <= 0) {
-                            zombiesKilled++;
-                            
-                            // Награда игроку
-                            if (bullet.owner === gameState.player1?.id) {
-                                updates[`player1/xp`] = (gameState.player1?.xp || 0) + 10;
-                                updates[`player1/kills`] = (gameState.player1?.kills || 0) + 1;
-                                updates[`player1/damageDealt`] = (gameState.player1?.damageDealt || 0) + bullet.damage;
-                            } else if (bullet.owner === gameState.player2?.id) {
-                                updates[`player2/xp`] = (gameState.player2?.xp || 0) + 10;
-                                updates[`player2/kills`] = (gameState.player2?.kills || 0) + 1;
-                                updates[`player2/damageDealt`] = (gameState.player2?.damageDealt || 0) + bullet.damage;
+                        // Создаем взрыв
+                        gameState.explosions.push(new Explosion(
+                            bullet.x + bullet.width/2,
+                            bullet.y + bullet.height/2,
+                            10
+                        ));
+                        
+                        // Проверка смерти игрока
+                        if (player.health <= 0) {
+                            player.health = 100;
+                            if (player.id === 'player1') {
+                                gameState.scores.player2++;
+                                player2ScoreEl.textContent = `Игрок 2: ${gameState.scores.player2}`;
+                            } else {
+                                gameState.scores.player1++;
+                                player1ScoreEl.textContent = `Игрок 1: ${gameState.scores.player1}`;
                             }
                             
-                            // Спавн бонуса (20% шанс)
-                            if (Math.random() < 0.2) {
-                                spawnPowerUp(zombie.x, zombie.y);
+                            // Большой взрыв при смерти
+                            gameState.explosions.push(new Explosion(
+                                player.x + player.width/2,
+                                player.y + player.height/2,
+                                30
+                            ));
+                            
+                            // Проверка конца игры
+                            if (gameState.scores.player1 >= 5 || gameState.scores.player2 >= 5) {
+                                endGame();
                             }
                         }
                         
-                        break;
+                        return;
                     }
-                }
-                
-                // Обновление позиции пули, если не было столкновения
-                if (!updates[`bullets/${bullet.id}`]) {
-                    updates[`bullets/${bullet.id}/x`] = bullet.x;
-                    updates[`bullets/${bullet.id}/y`] = bullet.y;
-                    updates[`bullets/${bullet.id}/distance`] = bullet.distance;
-                }
+                });
             });
             
-            // Применение обновлений
-            if (Object.keys(updates).length > 0) {
-                database.ref(`games/${gameId}`).update(updates);
-            }
-        }
-        
-        // Спавн бонуса
-        function spawnPowerUp(x, y) {
-            if (!isHost) return;
-            
-            const powerUpId = generatePowerUpId();
-            const types = ['health', 'ammo', 'damage'];
-            const type = types[Math.floor(Math.random() * types.length)];
-            
-            const powerUp = {
-                id: powerUpId,
-                x: x,
-                y: y,
-                type: type,
-                width: 20,
-                height: 20,
-                color: type === 'health' ? '#ff5555' : type === 'ammo' ? '#5555ff' : '#ffff55'
-            };
-            
-            database.ref(`games/${gameId}/powerUps/${powerUpId}`).set(powerUp);
-        }
-        
-        // Обновление бонусов
-        function updatePowerUps() {
-            // Логика для подбора бонусов (реализуйте по аналогии с другими системами)
-        }
-        
-        // Обновление анимаций взрывов
-        function updateExplosions() {
-            for (let i = explosions.length - 1; i >= 0; i--) {
-                explosions[i].timer--;
-                if (explosions[i].timer <= 0) {
-                    explosions.splice(i, 1);
-                }
-            }
-        }
-        
-        // Проверка условий игры
-        function checkGameConditions() {
-            if (!isHost) return;
-            
-            const updates = {};
-            
-            // Проверка на завершение волны
-            if (zombiesKilled >= zombiesInWave && zombies.length === 0) {
-                waveNumber++;
-                zombiesInWave = 10 + waveNumber * 5;
-                zombiesSpawned = 0;
-                zombiesKilled = 0;
+            // Проверка столкновений игроков с powerups
+            gameState.powerups.forEach((powerup, powerupIndex) => {
+                if (powerup.collected) return;
                 
-                updates['wave'] = waveNumber;
+                Object.values(gameState.players).forEach(player => {
+                    if (powerup.x < player.x + player.width &&
+                        powerup.x + powerup.width > player.x &&
+                        powerup.y < player.y + player.height &&
+                        powerup.y + powerup.height > player.y) {
+                        
+                        powerup.collected = true;
+                        applyPowerup(player, powerup.type);
+                        gameState.powerups.splice(powerupIndex, 1);
+                        return;
+                    }
+                });
+            });
+        }
+        
+        function applyPowerup(player, type) {
+            const now = Date.now();
+            
+            switch (type) {
+                case 'health':
+                    player.health = Math.min(100, player.health + 30);
+                    break;
+                    
+                case 'speed':
+                    player.powerups.speed.active = true;
+                    player.powerups.speed.endTime = now + POWERUP_DURATION;
+                    player.speed = PLAYER_SPEED * 1.5;
+                    break;
+                    
+                case 'weapon':
+                    player.powerups.weapon.active = true;
+                    player.powerups.weapon.endTime = now + POWERUP_DURATION;
+                    player.fireRate = 200; // Увеличиваем скорострельность
+                    break;
+            }
+        }
+        
+        function updateGame() {
+            // Обновление игроков
+            Object.values(gameState.players).forEach(player => {
+                player.update(gameState.keys);
+            });
+            
+            // Обновление пуль
+            gameState.bullets = gameState.bullets.filter(bullet => !bullet.update());
+            
+            // Обновление взрывов
+            gameState.explosions = gameState.explosions.filter(explosion => explosion.draw());
+            
+            // Проверка столкновений
+            checkCollisions();
+            
+            // Спавн powerups
+            const newPowerup = spawnPowerup();
+            if (newPowerup) {
+                gameState.powerups.push(newPowerup);
+            }
+            
+            // Синхронизация состояния игры между игроками
+            if (gameState.isHost && Date.now() - gameState.lastUpdate > 100) {
+                gameState.lastUpdate = Date.now();
                 
-                // Восстановление здоровья базы между волнами
-                updates['baseHealth'] = Math.min(base.maxHealth, gameState.baseHealth + 20);
-            }
-            
-            // Проверка на проигрыш (разрушение базы)
-            if (gameState.baseHealth <= 0) {
-                updates['gameState'] = 'gameover';
-                gameOver();
-            }
-            
-            // Проверка на смерть игроков
-            if (gameState.player1?.health <= 0 && gameState.player2?.health <= 0) {
-                updates['gameState'] = 'gameover';
-                gameOver();
-            }
-            
-            // Проверка повышения уровня
-            if (gameState.player1?.xp >= gameState.player1?.maxXP) {
-                updates['player1/level'] = (gameState.player1?.level || 1) + 1;
-                updates['player1/xp'] = 0;
-                updates['player1/maxXP'] = 100 + (updates['player1/level'] - 1) * 50;
-                updates['player1/maxHealth'] = 100 + (updates['player1/level'] - 1) * 20;
-                updates['player1/health'] = updates['player1/maxHealth'];
-            }
-            
-            if (gameState.player2?.xp >= gameState.player2?.maxXP) {
-                updates['player2/level'] = (gameState.player2?.level || 1) + 1;
-                updates['player2/xp'] = 0;
-                updates['player2/maxXP'] = 100 + (updates['player2/level'] - 1) * 50;
-                updates['player2/maxHealth'] = 100 + (updates['player2/level'] - 1) * 20;
-                updates['player2/health'] = updates['player2/maxHealth'];
-            }
-            
-            // Применение обновлений
-            if (Object.keys(updates).length > 0) {
-                database.ref(`games/${gameId}`).update(updates);
+                // Подготавливаем данные для синхронизации
+                const syncData = {
+                    players: gameState.players,
+                    bullets: gameState.bullets,
+                    powerups: gameState.powerups,
+                    scores: gameState.scores,
+                    timestamp: Date.now()
+                };
+                
+                // Отправляем данные в Firebase
+                database.ref(`games/${gameState.gameId}`).update(syncData);
             }
         }
         
-        // Конец игры
-        function gameOver() {
-            gameRunning = false;
-            
-            // Обновление экрана завершения игры
-            document.getElementById('finalWave').textContent = waveNumber;
-            
-            if (base.health <= 0) {
-                document.getElementById('gameOverTitle').textContent = "БАЗА РАЗРУШЕНА";
-                document.getElementById('gameOverMessage').textContent = `Вы защищали базу до волны ${waveNumber}, но зомби победили.`;
-            } else {
-                document.getElementById('gameOverTitle').textContent = "ВСЕ ИГРОКИ МЕРТВЫ";
-                document.getElementById('gameOverMessage').textContent = `Вы достигли волны ${waveNumber}, но не смогли устоять перед ордами зомби.`;
-            }
-            
-            gameOverScreen.style.display = 'flex';
-        }
-        
-        // Сброс игры
-        function resetGame() {
-            // Удаление игры из Firebase
-            if (isHost) {
-                database.ref(`games/${gameId}`).remove();
-            }
-            
-            // Сброс состояния
-            gameOverScreen.style.display = 'none';
-            startScreen.style.display = 'flex';
-            
-            // Очистка
-            zombies = [];
-            bullets = [];
-            powerUps = [];
-            explosions = [];
-        }
-        
-        // Отрисовка игры
         function drawGame() {
-            // Очистка холста
+            // Очистка canvas
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
-            // Рисование фона
-            ctx.fillStyle = '#0a0a0a';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Рисуем звездный фон
+            drawStarfield();
             
-            // Рисование травы и камней
-            background.forEach(item => {
-                ctx.fillStyle = item.type === 'rock' ? '#777' : '#0a5a0a';
-                ctx.beginPath();
-                ctx.arc(item.x, item.y, item.size, 0, Math.PI * 2);
-                ctx.fill();
+            // Рисуем игроков
+            Object.values(gameState.players).forEach(player => {
+                player.draw();
             });
             
-            // Рисование базы
-            ctx.fillStyle = '#555';
-            ctx.fillRect(base.x - base.width / 2, base.y - base.height / 2, base.width, base.height);
+            // Рисуем пули
+            gameState.bullets.forEach(bullet => {
+                bullet.draw();
+            });
             
-            // Рисование зомби
-            zombies.forEach(zombie => {
-                ctx.save();
-                ctx.translate(zombie.x, zombie.y);
-                
-                // Тело
-                ctx.fillStyle = zombie.color;
-                ctx.beginPath();
-                ctx.arc(0, 0, zombie.width / 2, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Голова
-                ctx.fillStyle = '#5a2d2d';
-                ctx.beginPath();
-                ctx.arc(0, -10, 8, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Глаза
-                ctx.fillStyle = 'red';
-                ctx.beginPath();
-                ctx.arc(-4, -12, 2, 0, Math.PI * 2);
-                ctx.arc(4, -12, 2, 0, Math.PI * 2);
-                ctx.fill();
-                
-                ctx.restore();
-                
-                // Полоска здоровья
-                if (zombie.health < zombie.maxHealth) {
-                    const healthWidth = 30;
-                    const healthPercent = zombie.health / zombie.maxHealth;
-                    
-                    ctx.fillStyle = '#333';
-                    ctx.fillRect(zombie.x - healthWidth / 2, zombie.y - 25, healthWidth, 5);
-                    
-                    ctx.fillStyle = healthPercent > 0.5 ? '#4CAF50' : healthPercent > 0.2 ? '#ff9800' : '#f44336';
-                    ctx.fillRect(zombie.x - healthWidth / 2, zombie.y - 25, healthWidth * healthPercent, 5);
+            // Рисуем powerups
+            gameState.powerups.forEach(powerup => {
+                if (!powerup.collected) {
+                    powerup.draw();
                 }
             });
             
-            // Рисование пуль
-            bullets.forEach(bullet => {
-                ctx.fillStyle = bullet.color;
-                ctx.beginPath();
-                ctx.arc(bullet.x, bullet.y, bullet.size / 2, 0, Math.PI * 2);
-                ctx.fill();
-            });
+            // Рисуем взрывы (уже обновляются в updateGame)
+        }
+        
+        function drawStarfield() {
+            ctx.save();
+            ctx.fillStyle = 'white';
             
-            // Рисование другого игрока
-            if (otherPlayer.id) {
-                ctx.save();
-                ctx.translate(otherPlayer.x, otherPlayer.y);
-                ctx.rotate(otherPlayer.direction);
+            // Статичные звезды
+            for (let i = 0; i < 100; i++) {
+                const x = Math.sin(i * 100) * canvas.width/2 + canvas.width/2;
+                const y = Math.cos(i * 100) * canvas.height/2 + canvas.height/2;
+                const size = Math.random() * 1.5;
                 
-                // Корпус
-                ctx.fillStyle = otherPlayer.color;
-                ctx.fillRect(-15, -20, 30, 40);
-                
-                // Голова
-                ctx.fillStyle = '#ffe0b2';
+                ctx.globalAlpha = Math.random() * 0.8 + 0.2;
                 ctx.beginPath();
-                ctx.arc(0, -25, 10, 0, Math.PI * 2);
+                ctx.arc(x, y, size, 0, Math.PI * 2);
                 ctx.fill();
-                
-                // Оружие
-                ctx.fillStyle = '#795548';
-                ctx.fillRect(5, -5, 20, 5);
-                
-                ctx.restore();
-                
-                // Имя и уровень
-                ctx.fillStyle = 'white';
-                ctx.font = '12px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText(`Игрок ${isHost ? '2' : '1'} (Ур. ${otherPlayer.level})`, otherPlayer.x, otherPlayer.y - 35);
-                
-                // Полоска здоровья
-                const healthWidth = 30;
-                const healthPercent = otherPlayer.health / 100;
-                
-                ctx.fillStyle = '#333';
-                ctx.fillRect(otherPlayer.x - healthWidth / 2, otherPlayer.y - 45, healthWidth, 5);
-                
-                ctx.fillStyle = healthPercent > 0.5 ? '#4CAF50' : healthPercent > 0.2 ? '#ff9800' : '#f44336';
-                ctx.fillRect(otherPlayer.x - healthWidth / 2, otherPlayer.y - 45, healthWidth * healthPercent, 5);
             }
             
-            // Рисование локального игрока
-            ctx.save();
-            ctx.translate(localPlayer.x, localPlayer.y);
-            ctx.rotate(localPlayer.direction);
-            
-            // Корпус
-            ctx.fillStyle = localPlayer.color;
-            ctx.fillRect(-15, -20, 30, 40);
-            
-            // Голова
-            ctx.fillStyle = '#ffe0b2';
-            ctx.beginPath();
-            ctx.arc(0, -25, 10, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // Оружие (в зависимости от типа)
-            const weapon = weapons[localPlayer.weapon];
-            ctx.fillStyle = weapon.color;
-            ctx.fillRect(5, -5, 25, 5);
+            // Движущиеся звезды (параллакс эффект)
+            const time = Date.now() / 1000;
+            for (let i = 0; i < 50; i++) {
+                const x = (Math.sin(time + i * 20) * canvas.width/2 + canvas.width/2);
+                const y = (Math.cos(time + i * 20) * canvas.height/2 + canvas.height/2);
+                const size = Math.random() * 2;
+                
+                ctx.globalAlpha = Math.random() * 0.5 + 0.5;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
             
             ctx.restore();
-            
-            // Имя и уровень
-            ctx.fillStyle = 'white';
-            ctx.font = '12px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText(`Вы (Ур. ${localPlayer.level})`, localPlayer.x, localPlayer.y - 35);
-            
-            // Полоска здоровья
-            const healthWidth = 30;
-            const healthPercent = localPlayer.health / localPlayer.maxHealth;
-            
-            ctx.fillStyle = '#333';
-            ctx.fillRect(localPlayer.x - healthWidth / 2, localPlayer.y - 45, healthWidth, 5);
-            
-            ctx.fillStyle = healthPercent > 0.5 ? '#4CAF50' : healthPercent > 0.2 ? '#ff9800' : '#f44336';
-            ctx.fillRect(localPlayer.x - healthWidth / 2, localPlayer.y - 45, healthWidth * healthPercent, 5);
-            
-            // Рисование взрывов
-            explosions.forEach(explosion => {
-                ctx.fillStyle = `rgba(255, ${100 + explosion.timer * 5}, 0, ${explosion.timer / 30})`;
-                ctx.beginPath();
-                ctx.arc(explosion.x, explosion.y, explosion.radius * (1 - explosion.timer / 30), 0, Math.PI * 2);
-                ctx.fill();
-            });
-            
-            // Рисование бонусов
-            powerUps.forEach(powerUp => {
-                ctx.fillStyle = powerUp.color;
-                ctx.fillRect(powerUp.x - powerUp.width / 2, powerUp.y - powerUp.height / 2, powerUp.width, powerUp.height);
-                
-                // Иконка бонуса
-                ctx.fillStyle = 'white';
-                ctx.font = '14px Arial';
-                ctx.textAlign = 'center';
-                ctx.textBaseline = 'middle';
-                
-                if (powerUp.type === 'health') {
-                    ctx.fillText('+', powerUp.x, powerUp.y);
-                } else if (powerUp.type === 'ammo') {
-                    ctx.fillText('»', powerUp.x, powerUp.y);
-                } else {
-                    ctx.fillText('↑', powerUp.x, powerUp.y);
-                }
-            });
-            
-            // Рисование прицела
-            ctx.strokeStyle = 'red';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.arc(mouse.x, mouse.y, 10, 0, Math.PI * 2);
-            ctx.moveTo(mouse.x - 15, mouse.y);
-            ctx.lineTo(mouse.x - 5, mouse.y);
-            ctx.moveTo(mouse.x + 5, mouse.y);
-            ctx.lineTo(mouse.x + 15, mouse.y);
-            ctx.moveTo(mouse.x, mouse.y - 15);
-            ctx.lineTo(mouse.x, mouse.y - 5);
-            ctx.moveTo(mouse.x, mouse.y + 5);
-            ctx.lineTo(mouse.x, mouse.y + 15);
-            ctx.stroke();
         }
         
-        // Обновление UI
-        function updateUI() {
-            // Волна и зомби
-            document.getElementById('waveNumber').textContent = waveNumber;
-            document.getElementById('zombiesLeft').textContent = zombiesInWave - zombiesKilled;
+        function gameLoop() {
+            if (gameState.phase === 'playing') {
+                updateGame();
+                drawGame();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+        
+        function startGame() {
+            gameState.phase = 'playing';
+            startScreen.style.display = 'none';
+            waitingScreen.style.display = 'none';
+            gameOverScreen.style.display = 'none';
             
-            // Здоровье базы
-            const baseHealthPercent = base.health / base.maxHealth;
-            document.getElementById('baseHealthFill').style.width = `${baseHealthPercent * 100}%`;
+            // Сброс состояния игры
+            gameState.bullets = [];
+            gameState.powerups = [];
+            gameState.explosions = [];
             
-            // Игрок 1 (локальный или удаленный)
-            if (isHost) {
-                document.getElementById('player1Level').textContent = localPlayer.level;
-                document.getElementById('player1XP').textContent = localPlayer.xp;
-                document.getElementById('player1MaxXP').textContent = localPlayer.maxXP;
-                document.getElementById('player1HealthFill').style.width = `${(localPlayer.health / localPlayer.maxHealth) * 100}%`;
+            if (gameState.isHost) {
+                gameState.scores = { player1: 0, player2: 0 };
+                player1ScoreEl.textContent = 'Игрок 1: 0';
+                player2ScoreEl.textContent = 'Игрок 2: 0';
                 
-                if (gameState.player2) {
-                    document.getElementById('player2Level').textContent = gameState.player2.level;
-                    document.getElementById('player2XP').textContent = gameState.player2.xp;
-                    document.getElementById('player2MaxXP').textContent = gameState.player2.maxXP;
-                    document.getElementById('player2HealthFill').style.width = `${(gameState.player2.health / 100) * 100}%`;
+                // Создаем игроков
+                gameState.players = {
+                    player1: new Player('player1', canvas.width/2 - PLAYER_SIZE/2, 50, '#f44', true),
+                    player2: new Player('player2', canvas.width/2 - PLAYER_SIZE/2, canvas.height - 50 - PLAYER_SIZE, '#4af', false)
+                };
+                
+                // Инициализируем состояние игры в Firebase
+                database.ref(`games/${gameState.gameId}`).set({
+                    players: gameState.players,
+                    bullets: [],
+                    powerups: [],
+                    scores: { player1: 0, player2: 0 },
+                    timestamp: Date.now()
+                });
+            }
+        }
+        
+        function endGame() {
+            gameState.phase = 'gameOver';
+            
+            const winner = gameState.scores.player1 >= 5 ? 'player1' : 'player2';
+            const isLocalPlayerWinner = (winner === 'player1' && gameState.isHost) || 
+                                      (winner === 'player2' && !gameState.isHost);
+            
+            gameOverTitle.textContent = isLocalPlayerWinner ? 'ПОБЕДА!' : 'ПОРАЖЕНИЕ';
+            gameOverTitle.style.color = isLocalPlayerWinner ? '#4af' : '#f44';
+            gameOverTitle.style.textShadow = `0 0 10px ${isLocalPlayerWinner ? '#4af' : '#f44'}`;
+            
+            gameOverMessage.textContent = `Счет: ${gameState.scores.player1} - ${gameState.scores.player2}`;
+            gameOverScreen.style.display = 'flex';
+            
+            // Останавливаем синхронизацию для клиента
+            if (!gameState.isHost) {
+                database.ref(`games/${gameState.gameId}`).off();
+            }
+        }
+        
+        function createNewGame() {
+            gameState.playerId = 'player' + Math.floor(Math.random() * 1000);
+            gameState.gameId = 'game' + Date.now();
+            gameState.isHost = true;
+            
+            // Показываем ссылку для приглашения
+            const inviteUrl = `${window.location.origin}${window.location.pathname}?join=${gameState.gameId}`;
+            inviteLink.textContent = inviteUrl;
+            
+            // Переходим на экран ожидания
+            gameState.phase = 'waiting';
+            startScreen.style.display = 'none';
+            waitingScreen.style.display = 'flex';
+            
+            // Слушаем подключение второго игрока
+            database.ref(`games/${gameState.gameId}/players/player2`).on('value', (snapshot) => {
+                if (snapshot.exists()) {
+                    // Второй игрок подключился
+                    gameState.players.player2 = new Player(
+                        'player2', 
+                        canvas.width/2 - PLAYER_SIZE/2, 
+                        canvas.height - 50 - PLAYER_SIZE, 
+                        '#4af', 
+                        false
+                    );
+                    
+                    startGame();
                 }
+            });
+        }
+        
+        function joinGame(gameId) {
+            gameState.playerId = 'player' + Math.floor(Math.random() * 1000);
+            gameState.gameId = gameId;
+            gameState.isHost = false;
+            
+            // Переходим на экран ожидания
+            gameState.phase = 'waiting';
+            startScreen.style.display = 'none';
+            waitingScreen.style.display = 'flex';
+            inviteLink.textContent = 'Подключение к игре...';
+            
+            // Подключаемся к игре
+            database.ref(`games/${gameId}`).on('value', (snapshot) => {
+                const data = snapshot.val();
+                
+                if (!data) {
+                    alert('Игра не найдена!');
+                    cancelWait();
+                    return;
+                }
+                
+                // Первое подключение - регистрируемся как игрок 2
+                if (!data.players || !data.players.player2) {
+                    database.ref(`games/${gameId}/players/player2`).set({
+                        x: canvas.width/2 - PLAYER_SIZE/2,
+                        y: canvas.height - 50 - PLAYER_SIZE,
+                        health: 100
+                    });
+                }
+                
+                // Обновляем состояние игры
+                if (data.players) {
+                    gameState.players = {
+                        player1: new Player('player1', data.players.player1.x, data.players.player1.y, '#f44', false),
+                        player2: new Player('player2', data.players.player2.x, data.players.player2.y, '#4af', false)
+                    };
+                    
+                    // Обновляем другие данные игры
+                    gameState.bullets = data.bullets ? data.bullets.map(b => new Bullet(b.x, b.y, b.direction, b.ownerId, b.damage)) : [];
+                    gameState.powerups = data.powerups ? data.powerups.map(p => new Powerup(p.type, p.x, p.y)) : [];
+                    gameState.scores = data.scores || { player1: 0, player2: 0 };
+                    
+                    player1ScoreEl.textContent = `Игрок 1: ${gameState.scores.player1}`;
+                    player2ScoreEl.textContent = `Игрок 2: ${gameState.scores.player2}`;
+                    
+                    // Если игра уже началась, стартуем
+                    if (gameState.phase === 'waiting' && data.players.player1 && data.players.player2) {
+                        startGame();
+                    }
+                }
+            });
+        }
+        
+        function cancelWait() {
+            if (gameState.isHost) {
+                database.ref(`games/${gameState.gameId}`).remove();
             } else {
-                document.getElementById('player1Level').textContent = localPlayer.level;
-                document.getElementById('player1XP').textContent = localPlayer.xp;
-                document.getElementById('player1MaxXP').textContent = localPlayer.maxXP;
-                document.getElementById('player1HealthFill').style.width = `${(localPlayer.health / localPlayer.maxHealth) * 100}%`;
-                
-                if (gameState.player1) {
-                    document.getElementById('player2Level').textContent = gameState.player1.level;
-                    document.getElementById('player2XP').textContent = gameState.player1.xp;
-                    document.getElementById('player2MaxXP').textContent = gameState.player1.maxXP;
-                    document.getElementById('player2HealthFill').style.width = `${(gameState.player1.health / 100) * 100}%`;
-                }
+                database.ref(`games/${gameState.gameId}/players/player2`).remove();
+                database.ref(`games/${gameState.gameId}`).off();
             }
-        }
-        
-        // Звуковые эффекты
-        function playSound(type) {
-            // Реализация звуков (можно использовать Web Audio API или заранее загруженные звуки)
-            try {
-                const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-                const oscillator = audioCtx.createOscillator();
-                const gainNode = audioCtx.createGain();
-                
-                if (type === 'shoot') {
-                    oscillator.type = 'square';
-                    oscillator.frequency.value = 440;
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
-                } else if (type === 'explosion') {
-                    oscillator.type = 'sawtooth';
-                    oscillator.frequency.value = 110;
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.5);
-                } else if (type === 'powerup') {
-                    oscillator.type = 'sine';
-                    oscillator.frequency.value = 880;
-                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
-                }
-                
-                oscillator.connect(gainNode);
-                gainNode.connect(audioCtx.destination);
-                
-                oscillator.start();
-                oscillator.stop(audioCtx.currentTime + 0.5);
-            } catch (e) {
-                console.log("Audio error:", e);
-            }
-        }
-        
-        // Генерация ID
-        function generateGameId() {
-            return Math.random().toString(36).substr(2, 6).toUpperCase();
-        }
-        
-        function generatePlayerId() {
-            return Math.random().toString(36).substr(2, 9);
-        }
-        
-        function generateZombieId() {
-            return 'z' + Math.random().toString(36).substr(2, 5);
-        }
-        
-        function generateBulletId() {
-            return 'b' + Math.random().toString(36).substr(2, 5);
-        }
-        
-        function generatePowerUpId() {
-            return 'p' + Math.random().toString(36).substr(2, 5);
-        }
-        
-        // Копирование ссылки на игру
-        function copyGameLink() {
-            const link = gameLink.textContent;
-            navigator.clipboard.writeText(link).then(() => {
-                const originalText = copyButton.textContent;
-                copyButton.textContent = "Скопировано!";
-                setTimeout(() => {
-                    copyButton.textContent = originalText;
-                }, 2000);
-            });
-        }
-        
-        // Проверка URL на наличие ID игры
-        function checkUrlForGameId() {
-            const params = new URLSearchParams(window.location.search);
-            const gameIdParam = params.get('game');
             
-            if (gameIdParam) {
-                document.getElementById('gameIdInput').value = gameIdParam;
-                joinGameButton.click();
-            }
+            gameState.phase = 'start';
+            waitingScreen.style.display = 'none';
+            startScreen.style.display = 'flex';
         }
         
-        // Запуск проверки URL при загрузке
-        window.addEventListener('load', checkUrlForGameId);
+        // Обработчики событий
+        createGameBtn.addEventListener('click', createNewGame);
+        joinGameBtn.addEventListener('click', () => {
+            const gameId = prompt('Введите ID игры:');
+            if (gameId) {
+                joinGame(gameId);
+            }
+        });
+        cancelWaitBtn.addEventListener('click', cancelWait);
+        playAgainBtn.addEventListener('click', () => {
+            if (gameState.isHost) {
+                createNewGame();
+            } else {
+                joinGame(gameState.gameId);
+            }
+        });
+        
+        // Обработка клавиатуры
+        window.addEventListener('keydown', (e) => {
+            gameState.keys[e.code] = true;
+            
+            // Стрельба
+            if (gameState.phase === 'playing') {
+                if ((e.code === 'Space' || e.code === 'KeyF') && gameState.playerId) {
+                    const player = gameState.isHost ? gameState.players.player1 : gameState.players.player2;
+                    const bullet = player.fire();
+                    if (bullet) {
+                        gameState.bullets.push(bullet);
+                        
+                        // Хост сразу добавляет пулю, клиент отправляет запрос на добавление
+                        if (gameState.isHost) {
+                            database.ref(`games/${gameState.gameId}/bullets`).set(gameState.bullets);
+                        } else {
+                            database.ref(`games/${gameState.gameId}/bullets`).push({
+                                x: bullet.x,
+                                y: bullet.y,
+                                direction: bullet.direction,
+                                ownerId: bullet.ownerId,
+                                damage: bullet.damage
+                            });
+                        }
+                    }
+                }
+            }
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            gameState.keys[e.code] = false;
+        });
+        
+        // Обработка мобильных управлений
+        leftBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            gameState.mobileControls.left = true;
+            gameState.keys[gameState.isHost ? 'ArrowLeft' : 'KeyA'] = true;
+        });
+        
+        leftBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            gameState.mobileControls.left = false;
+            gameState.keys[gameState.isHost ? 'ArrowLeft' : 'KeyA'] = false;
+        });
+        
+        rightBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            gameState.mobileControls.right = true;
+            gameState.keys[gameState.isHost ? 'ArrowRight' : 'KeyD'] = true;
+        });
+        
+        rightBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            gameState.mobileControls.right = false;
+            gameState.keys[gameState.isHost ? 'ArrowRight' : 'KeyD'] = false;
+        });
+        
+        fireBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            gameState.mobileControls.fire = true;
+            gameState.keys['Space'] = true;
+            
+            // Имитируем нажатие пробела для стрельбы
+            if (gameState.phase === 'playing' && gameState.playerId) {
+                const player = gameState.isHost ? gameState.players.player1 : gameState.players.player2;
+                const bullet = player.fire();
+                if (bullet) {
+                    gameState.bullets.push(bullet);
+                    
+                    if (gameState.isHost) {
+                        database.ref(`games/${gameState.gameId}/bullets`).set(gameState.bullets);
+                    } else {
+                        database.ref(`games/${gameState.gameId}/bullets`).push({
+                            x: bullet.x,
+                            y: bullet.y,
+                            direction: bullet.direction,
+                            ownerId: bullet.ownerId,
+                            damage: bullet.damage
+                        });
+                    }
+                }
+            }
+        });
+        
+        fireBtn.addEventListener('touchend', (e) => {
+            e.preventDefault();
+            gameState.mobileControls.fire = false;
+            gameState.keys['Space'] = false;
+        });
+        
+        // Обработка изменения размера окна
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+        
+        // Проверка параметров URL для быстрого подключения
+        window.addEventListener('load', () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const joinGameId = urlParams.get('join');
+            
+            if (joinGameId) {
+                joinGame(joinGameId);
+            }
+            
+            // Запускаем игровой цикл
+            gameLoop();
+        });
     </script>
 </body>
 </html>
